@@ -5,6 +5,7 @@ Version: 0.99.0
 LazyData: false
 Depends: R (>= 4.1.0), GenomicRanges 
 Imports: plyranges, rtracklayer, dplyr
+Suggests: GenomicAlignments
 Suggests: EnsDb.Hsapiens.v86
 License: Artistic-2.0
 VignetteBuilder: knitr
