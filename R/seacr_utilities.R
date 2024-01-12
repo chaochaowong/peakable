@@ -20,9 +20,9 @@ read_seacr <- function(file) {
   col_names <- c("chr", "start", "end", "AUC", "max.signal", 
                  "max.signal.region", "num")
   
-  tb <- read.delim(file_name, col.names = FALSE)
+  tb <- read.delim(file, col.names = FALSE)
   
-  if (length(tb) > 0 & ncol(tb)) {
+  if (length(tb) > 0) {
     names(tb) <- col_names[1:ncol(tb)]
     tb$strand <- '*'
     gr <- plyranges::as_granges(tb, seqnames = chr)
