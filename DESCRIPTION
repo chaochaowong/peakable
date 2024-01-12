@@ -1,0 +1,13 @@
+Package: peaklerrr
+Title: CUT&RUN-seq Peak caller QC 
+Description: functions perform peak caller QC
+Version: 0.99.0
+LazyData: false
+Depends: R (>= 4.1.0), GenomicRanges 
+Imports: plyranges, rtracklayer, dplyr
+Suggests: EnsDb.Hsapiens.v86
+License: Artistic-2.0
+VignetteBuilder: knitr
+Encoding: UTF-8
+Author: Chao-Jen Wong
+Maintainer: Chao-Jen wong <cwo11@seattlechildrens.org>
