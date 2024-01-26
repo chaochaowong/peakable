@@ -14,24 +14,17 @@
     \item{`read_macs2_narrow`}
     \item{`read_macs2_broad`}
     \item{`read_seacr`}
-    \item{`summit_from_seacr`}
+    \item{`find_consensus`: find consensus peaks between two peak sets with adjust score, summit (MACS2), or maximun signals (SEACR)} 
     \item{`regionhit_per_sample_mat`}
 
   }
+  All the test peak bed profiles were generated from GEO series
+  GSM3391651 and GSM3391656.
 }
 
 \section{Author}{
   \itemize{
     \item{Chao-Jen Wong (chaojen.wong@seattlechildrens.org)}
-  }
-}
-
-\examples{
-  \dontrun{
-    data(expression_tpm)
-    data(model)
-    data(crispr_gene_dependency)
-    data(crispr_gene_effect)
   }
 }
 

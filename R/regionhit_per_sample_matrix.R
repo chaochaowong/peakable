@@ -32,28 +32,30 @@ peakCoverageMatrixRSE <- function(peakset_gr, sample_df, spike_in_norm = TRUE,
 regionhit_per_sample_mat <- function(regions, peaks_grl) {
   # peaks_grl: peaks for each sample
   # regions: usually merge peaks by a peak caller
-  require(purrr)
-  require(GenomicRanges)
   regions <- keepStandardChromosomes(regions, pruning.mode="coarse")
   min_overlap <- as.integer(min(width(regions)) / 2)
-  map_df(peaks_grl, function(pks) {
+  purrr::map_df(peaks_grl, function(pks) {
     pks <- keepStandardChromosomes(pks, pruning.mode="coarse")
     #seqlevelsStyle(pks) <- 'Ensembl'
     cnt <- countOverlaps(query=regions, subject=pks, ignore.strand=TRUE,
                          minoverlap = min_overlap)
     cnt <- if_else(cnt > 0, 1, 0) # convert number greater than 0 to 1
-    return(cnt)
   })
 }
 
-promoterhit_per_sample_mat <- function(ensdb, peaks_grl) {
+promoterhit_per_sample_mat <- function(ensdb, peaks_grl,
+                                       upstream=3000,
+                                       downstream=300) {
+  #' for Ensembl only at this moment
   #' construct promoter-hit-per-sample matrix (0,1)
   #' Input: 
   #'     ensdb: EnsDb or TxDb
   require(purrr)
   require(GenomiceRanges)
 
-  around_tss <- promoters(ensdb, upstream = 3000, downstream=3000, 
+  around_tss <- promoters(ensdb, 
+                          upstream = upsream,
+                          downstream = downstream, 
                           use.names=TRUE, 
                           columns = c("gene_id", "gene_name", "gene_biotype"))
   around_tss <- keepStandardChromosomes(around_tss, pruning.mode="coarse")

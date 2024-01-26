@@ -3,17 +3,6 @@
 #   +/- 50 from summit from macs2 peak calling
 #   total 100 bps by extending the max.signal.region (volumn 5) from SEACR
 
-seacr_bed_to_gr <- function(file_name) {
-  col_names <- c("chr", "start", "end", "AUC", "max.signal", "max.signal.region", "num")
-  gr <- readr::read_delim(file_name, col_names = FALSE) 
-  # if the bed file columns are not what SEACR claims to be, then just assume it does follow
-  # the "order" of chr, start, end, ...
-  # also assume # of column is less thatn 5
-  names(gr) <- col_names[1:ncol(gr)]
-  gr <- gr %>% tibble::add_column(strand = "*", .name_repair = "minimal")
-  gr <- as_granges(gr, seqnames = chr)
-}
-
 reframe_summit_region_seacrp <- function(file_name, reframe_width = 200L) {
   # x: must be seacr peak bed files
   require(plyranges)

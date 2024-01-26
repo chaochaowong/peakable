@@ -29,3 +29,17 @@ read_seacr <- function(file) {
   }
   
 }
+
+
+.GetSEACRReplicatesConsensus <- function(query, subject) {
+  # 
+  # get consensus peakeset of two searc peaksets
+  # SEARC with max.signal column
+  mean_width <- min(min(width(query)), min(width(subject))) / 2
+  # overlap at least half of the minimal width of both sets
+  # possible improvement: take overlapped peaks; take intersection; take the summit region that
+  # has the most signal; here subsetByOverlaps is the simpliest way to do ...
+  consensus <- subsetByOverlaps(query, subject, minoverlap = as.integer(mean_width),
+                                ignore.strand = TRUE) %>%
+    plyranges::arrange(dplyr::desc(max.signal))
+}

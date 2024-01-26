@@ -6,3 +6,5 @@ export(read_macs2_narrow,
        read_macs2_broad,
        read_seacr,
        summit_from_seacr)
+
+export(consolidate_peaks)
