@@ -18,8 +18,9 @@
     \item{`regionhit_per_sample_mat`}
 
   }
-  All the test peak bed profiles were generated from GEO series
-  GSM3391651 and GSM3391656.
+  
+  All the test peak files were profiled from GEO series GSM3391651, GSM3391651, 
+  and GSM3391656.
 }
 
 \section{Author}{

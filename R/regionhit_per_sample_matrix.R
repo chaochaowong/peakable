@@ -1,6 +1,7 @@
 # script can be optimized; edit to improve efficiency
-peakCoverageMatrixRSE <- function(peakset_gr, sample_df, spike_in_norm = TRUE,
-                               spike_in_factor = NULL) {
+peakCoverageMatrixRSE <- function(peakset_gr, sample_df, 
+                                  spike_in_norm = TRUE,
+                                  spike_in_factor = NULL) {
   # - sample_df is a data.frame must have sample_id, bam_file, aligned_paired, 
   #   and spike_in_factor (spike_nrom=TRUE) columns
   # - count reads hitting the peakset then normlized by spike_in_norm (if spike_norm=TRUE)
@@ -16,19 +17,26 @@ peakCoverageMatrixRSE <- function(peakset_gr, sample_df, spike_in_norm = TRUE,
                           mode = "Union",
                           fragments=FALSE,
                           inter.feature=FALSE)
-  assays(se)[['spikein_norm']] <- t(t(assays(se)[['counts']]) * sample_df$spikein_factor)
-  
   rownames(se) <- paste0('peakname_', 1:length(se))
   colData(se) <- DataFrame(sample_df)
   se$reads <- colSums(assays(se)[['counts']])
-  se$reads_spikein_norm <- se$reads * se$spikein_factor
+  
+  if (spike_in_norm & !is.null(spike_in_factor)) {
+    assays(se)[['spikein_norm']] <- 
+      t(t(assays(se)[['counts']]) * sample_df$spikein_factor)
+    se$reads_spikein_norm <- se$reads * se$spikein_factor
+  }
+  
   # if aligned_paried is available
-  se$FRiP <- se$reads / se$aligned_paired
+  if ('aligned_paired' %in% names(mcols(se))) {
+    se$FRiP <- se$reads / se$aligned_paired
+  }
   
   return(se)
 
 }
 
+#' @export
 regionhit_per_sample_mat <- function(regions, peaks_grl) {
   # peaks_grl: peaks for each sample
   # regions: usually merge peaks by a peak caller
@@ -89,7 +97,7 @@ genehit_per_sample_mat <- function(ensdb, peaks_grl) {
   gene_per_sample = tmp[rowSums(tmp[, 1:(ncol(tmp)-2)]) > 0, ] 
 }
 
-.pca_pc1_pc2 <- function(mat, tb_to_join, n_pcs=2) {
+.getPCA <- function(mat, tb_to_join, n_pcs=2) {
   pca <- prcomp(mat, scale. = TRUE)
   as.data.frame(pca$rotation[, 1:n_pcs]) %>%
     rownames_to_column(var='callpeaks') %>%

@@ -1,5 +1,6 @@
 consolidate_peaks <- function(grl) {
-  # consolidate peaks from a list of GRanges
+  # should update to as S3 and S4 method
+  # consolidate peaks from a list of GRanges or GRangesList
   # keep standard chromosomes
   # keep clean: no mcols and only standard chromosome
   gr <- unlist(as(grl, "GRangesList"))
@@ -8,5 +9,57 @@ consolidate_peaks <- function(grl) {
   GenomicRanges::reduce(gr)
 }
 
+.get_hits_vectors <- function(x, y, hits) {
+  # need a unit test for this
+  hits_strings <- paste0(queryHits(hits), '-', subjectHits(hits))  
+  
+  left_hit <- rep('left', length.out=length(x))
+  right_hit <- rep('right', length.out=length(y))
 
+  left_hit[queryHits(hits)] <- hits_strings
+  right_hit[subjectHits(hits)] <- hits_strings
+  return(list(left_hit = left_hit, right_hit = right_hit))
 
+}
+
+#' @example
+#' file_query <- system.file('extdata',
+#'                           'chr2_Rep1_H1_H3K4me3.stringent.bed',
+#'                           package = 'peaklerrr')
+#' file_subject <- system.file('extdata',
+#'                             'chr2_Rep2_H1_H3K4me3.stringent.bed',
+#'                             package = 'peaklerrr')
+#' file_subject <- system.file('extdata',
+#'                             'chr2_Rep1_H1_CTCF.stringent.bed',
+#'                             package = 'peaklerrr')
+#'
+#' query <- read_seacr(file_query)
+#' subject <- read_seacr(file_subject)
+#' @export 
+find_overlaps_venn_diagram <- function(x, y, 
+                                       label_x,
+                                       label_y,
+                                       maxgap = -1L,
+                                       minoverlap = 1L, ...) {
+
+  hits <- findOverlaps(x, y, 
+                       maxgap = maxgap, 
+                       minoverlap = minoverlap, 
+                       type = "any",
+                       select = "all",
+                       ignore.strand = TRUE)
+  
+  hits_vectors <- .get_hits_vectors(x, y, hits)
+  names(hit_one_vector) <- c(label_x, label_y)
+  
+  ggVennDiagram::ggVennDiagram(hits_vectors,
+                               stroke_size = 0.5,
+                               edge_lty = "blank",
+                               edge_size = 0.5,
+                               label_txtWidth = 20,
+                               label = 'both') +
+    scale_fill_gradient(high = "#046C9A", low = "#ABDDDE" ) +
+    theme(legend.position = 'none')
+    
+  
+}

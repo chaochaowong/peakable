@@ -1,16 +1,18 @@
-summit_from_seacr <- function(seacr_gr, summit_wid = NULL) {
-  # convert to seacr max.signal.region column to GRanges
-  summit <- GRanges(gr$max.signal.region) %>%
-    plyranges::mutate(name = paste0('peakname_', 1:length(sub)),
-                      score = gr$max.signal, 
-                      itemRgb ='#0000FF')
-  if (!is.null(summit_wid) & is.integer(summit_wid)) {
-    summit <- 
-      plyranges::mutate(anchor_center(summit), width = summit_wid)
-  }
-  return(summit)
-}
+#' Import SEACR peak BED file and format
+#' ranges to a object
+#' @file: a path to a SEACR peak BED file or a connection
+#' 
+#' @return a GRanges object
+#' @rdname read_seacr
+#' @examples
+#' seacr_file <- system.file('extdata',
+#'                           'chr2_Rep1_H1_CTCF.stringent.bed',
+#'                            package='peaklerrr')
+#' gr <- read_seacr(seacr_file)
+#' gr
+#'
 
+#' @export
 read_seacr <- function(file) {
   # sanity check
   stopifnot(length(file) == 1)
@@ -31,15 +33,16 @@ read_seacr <- function(file) {
 }
 
 
-.GetSEACRReplicatesConsensus <- function(query, subject) {
-  # 
-  # get consensus peakeset of two searc peaksets
-  # SEARC with max.signal column
-  mean_width <- min(min(width(query)), min(width(subject))) / 2
-  # overlap at least half of the minimal width of both sets
-  # possible improvement: take overlapped peaks; take intersection; take the summit region that
-  # has the most signal; here subsetByOverlaps is the simpliest way to do ...
-  consensus <- subsetByOverlaps(query, subject, minoverlap = as.integer(mean_width),
-                                ignore.strand = TRUE) %>%
-    plyranges::arrange(dplyr::desc(max.signal))
+
+summit_from_seacr <- function(seacr_gr, summit_wid = NULL) {
+  # convert to seacr max.signal.region column to GRanges
+  summit <- GRanges(gr$max.signal.region) %>%
+    plyranges::mutate(name = paste0('peakname_', 1:length(sub)),
+                      score = gr$max.signal, 
+                      itemRgb ='#0000FF')
+  if (!is.null(summit_wid) & is.integer(summit_wid)) {
+    summit <- 
+      plyranges::mutate(anchor_center(summit), width = summit_wid)
+  }
+  return(summit)
 }
