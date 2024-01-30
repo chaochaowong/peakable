@@ -1,3 +1,17 @@
+#' @importFeom GenomicRanges reduce
+#' @export
+consolidate_peaks <- function(grl) {
+  # should update to as S3 and S4 method
+  # consolidate peaks from a list of GRanges or GRangesList
+  # keep standard chromosomes
+  # keep clean: no mcols and only standard chromosome
+  gr <- unlist(as(grl, "GRangesList"))
+  gr <- keepStandardChromosomes(gr, pruning.mode='coarse')
+  mcols(gr) <- NULL
+  GenomicRanges::reduce(gr)
+}
+
+
 # script can be optimized; edit to improve efficiency
 peakCoverageMatrixRSE <- function(peakset_gr, sample_df, 
                                   spike_in_norm = TRUE,
@@ -36,16 +50,66 @@ peakCoverageMatrixRSE <- function(peakset_gr, sample_df,
 
 }
 
+#' Construct a hit matrix of peaks against a collection of ranges
+#' 
+#' @regions: a GRanges object
+#' @peaks_grl: a list of GRanges or a GRangesList object representing peaks 
+#' @min_overlap: minimal overal between peaks and regions
+#' 
+#' @return a matrix
+#' @importFram purrr map_df
+#' @example
 #' @export
-regionhit_per_sample_mat <- function(regions, peaks_grl) {
+#' 
+consolidated_peak_hits <- function(grl, min_overlap = NULL) {
+  
+  # grl: peaks for each sample
+  # make sure the seq level style of peaks and regions are compatible
+  
+  # need unit test:
+  # the col names of mat matches the names pf peaks_grl
+  # the seq levels of peaks_grl must match each other
+  
+  # check names of grl
+  if (is.null(grl))
+    stop('The names of grl is NULL. The names should be the sample ID and must be given.')
+  
+  regions <- consolidate_peaks(grl)
+  
+  if (is.null(min_overlap))
+    min_overlap <- as.integer(min(width(regions)) / 2)
+  
+  if (!is.integer(min_overlap))
+    min_overlap <- as(min_overLap, 'integer')
+  
+  mat <- regionhit_per_sample_mat(regions, grl, 
+                                  min_overlap=min_overlap)
+  return(mat)
+}
+
+#' @importFrom GenomeInfoDb keepStandardChromosomes
+#' @importFrom GenomicRanges countOverlaps
+#' @export
+regionhit_per_sample_mat <- function(regions, grl, min_overlap = NULL) {
+  # same as regional_hits
   # peaks_grl: peaks for each sample
-  # regions: usually merge peaks by a peak caller
+  # regions: a GRanges object, usually merge peaks by a peak caller
+  # make sure the seq level style of peaks and regions are compatible
+  if (is.null(grl))
+    names(grl) <- paste0('sample-', seq(1, length(grl)))
+  
   regions <- keepStandardChromosomes(regions, pruning.mode="coarse")
-  min_overlap <- as.integer(min(width(regions)) / 2)
-  purrr::map_df(peaks_grl, function(pks) {
+  
+  if (is.null(min_overlap))
+    min_overlap <- as.integer(min(width(regions)) / 2)
+  
+  
+  purrr::map_dfc(grl, function(pks) {
     pks <- keepStandardChromosomes(pks, pruning.mode="coarse")
     #seqlevelsStyle(pks) <- 'Ensembl'
-    cnt <- countOverlaps(query=regions, subject=pks, ignore.strand=TRUE,
+    cnt <- countOverlaps(query=regions, subject=pks, 
+                         ignore.strand=TRUE,
+                         type = 'any',
                          minoverlap = min_overlap)
     cnt <- if_else(cnt > 0, 1, 0) # convert number greater than 0 to 1
   })
@@ -97,25 +161,18 @@ genehit_per_sample_mat <- function(ensdb, peaks_grl) {
   gene_per_sample = tmp[rowSums(tmp[, 1:(ncol(tmp)-2)]) > 0, ] 
 }
 
-.getPCA <- function(mat, tb_to_join, n_pcs=2) {
+#' @param mat, sample_info, n_pcs
+#' @importFrom tibble rownames_to_column
+#' @importFrom dplyr left_join
+.getPCA <- function(mat, sample_info=NULL, n_pcs=2) {
   pca <- prcomp(mat, scale. = TRUE)
-  as.data.frame(pca$rotation[, 1:n_pcs]) %>%
-    rownames_to_column(var='callpeaks') %>%
-    left_join(tb_to_join, by='callpeaks')
+  pcs <- as.data.frame(pca$rotation[, 1:n_pcs]) 
+  
+  if (!is.null(sample_info) & 'sample_id' %in% names(sample_info)) {
+    pcs <- pcs %>%
+      tibble::rownames_to_column(var='sample_id') %>%
+      dplyr::left_join(sample_info, by='sample_id')
+  }
+  return(pcs)
 }
 
-# for each gene or promoter (depending on the mat), value is 1 if both duplicates hitting on it
-# region-per-sample: combine duplicates—if both 2, then TRUE, otherwise FALSE
-.comb_duplicates_matrix <- function(hit_mat, duplicates) {
-  duplicate <- c("PDX_2_sample_9", "PDX_2_sample_10",
-                "RCH", "REH")
-  tmp <- map_dfc(duplicate, function(x) {
-    idx <- grepl(x, names(hit_mat))
-    rowSums(hit_mat[, idx]) == 2
-    #hit_mat[, idx] %>% mutate_all(as.logical) %>% 
-     # rowSums() 
-  }) %>%
-    setNames(duplicate) %>%
-    add_column(gene_id = hit_mat$gene_id,
-               gene_name = hit_mat$gene_name)
-}

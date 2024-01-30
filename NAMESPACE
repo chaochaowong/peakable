@@ -1,10 +1,9 @@
-export(promoterhit_per_sample_mat, 
-       genehit_per_sample_mat, 
-       regionhit_per_sample_mat)
-
 export(read_macs2_narrow,
        read_macs2_broad,
-       read_seacr,
-       summit_from_seacr)
+       read_seacr)
 
-export(consolidate_peaks)
+export(consolidate_peaks, 
+       consolidated_peak_hits,
+       regionhit_per_sample_mat)
+
+export(find_overlaps_venn)

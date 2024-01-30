@@ -1,14 +1,3 @@
-consolidate_peaks <- function(grl) {
-  # should update to as S3 and S4 method
-  # consolidate peaks from a list of GRanges or GRangesList
-  # keep standard chromosomes
-  # keep clean: no mcols and only standard chromosome
-  gr <- unlist(as(grl, "GRangesList"))
-  gr <- keepStandardChromosomes(gr, pruning.mode='coarse')
-  mcols(gr) <- NULL
-  GenomicRanges::reduce(gr)
-}
-
 .get_hits_vectors <- function(x, y, hits) {
   # need a unit test for this
   hits_strings <- paste0(queryHits(hits), '-', subjectHits(hits))  
@@ -35,12 +24,13 @@ consolidate_peaks <- function(grl) {
 #'
 #' query <- read_seacr(file_query)
 #' subject <- read_seacr(file_subject)
+#' @importFrom ggVennDiagram
 #' @export 
-find_overlaps_venn_diagram <- function(x, y, 
-                                       label_x,
-                                       label_y,
-                                       maxgap = -1L,
-                                       minoverlap = 1L, ...) {
+find_overlaps_venn <- function(x, y, 
+                               label_x,
+                               label_y,
+                               maxgap = -1L,
+                               minoverlap = 1L, ...) {
 
   hits <- findOverlaps(x, y, 
                        maxgap = maxgap, 
@@ -60,6 +50,4 @@ find_overlaps_venn_diagram <- function(x, y,
                                label = 'both') +
     scale_fill_gradient(high = "#046C9A", low = "#ABDDDE" ) +
     theme(legend.position = 'none')
-    
-  
 }
