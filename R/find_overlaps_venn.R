@@ -43,7 +43,7 @@ find_overlaps_venn <- function(x, y,
                        ignore.strand = TRUE)
   
   hits_vectors <- .get_hits_vectors(x, y, hits)
-  names(hit_vectors) <- c(label_x, label_y)
+  names(hits_vectors) <- c(label_x, label_y)
   
   ggVennDiagram::ggVennDiagram(hits_vectors,
                                stroke_size = 0.5,
