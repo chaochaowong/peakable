@@ -4,7 +4,7 @@ consolidate_peaks <- function(grl) {
   # should update to as S3 and S4 method
   # consolidate peaks from a list of GRanges or GRangesList
   # keep standard chromosomes
-  # keep clean: no mcols and only standard chromosome
+  # keep clean: remove mcols and only standard chromosome
   gr <- unlist(as(grl, "GRangesList"))
   gr <- keepStandardChromosomes(gr, pruning.mode='coarse')
   mcols(gr) <- NULL
@@ -60,7 +60,6 @@ peakCoverageMatrixRSE <- function(peakset_gr, sample_df,
 #' @importFram purrr map_df
 #' @example
 #' @export
-#' 
 consolidated_peak_hits <- function(grl, min_overlap = NULL) {
   
   # grl: peaks for each sample
@@ -94,7 +93,7 @@ regionhit_per_sample_mat <- function(regions, grl, min_overlap = NULL) {
   # same as regional_hits
   # peaks_grl: peaks for each sample
   # regions: a GRanges object, usually merge peaks by a peak caller
-  # make sure the seq level style of peaks and regions are compatible
+  # make sure the seq leveql style of peaks and regions are compatible
   if (is.null(grl))
     names(grl) <- paste0('sample-', seq(1, length(grl)))
   

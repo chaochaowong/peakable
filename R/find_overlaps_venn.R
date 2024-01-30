@@ -27,11 +27,14 @@
 #' @importFrom ggVennDiagram
 #' @export 
 find_overlaps_venn <- function(x, y, 
-                               label_x,
-                               label_y,
+                               label_x=NULL,
+                               label_y=NULL,
                                maxgap = -1L,
                                minoverlap = 1L, ...) {
 
+  if (is.null(label_x)) label_x <- 'query'
+  if (is.null(label_y)) label_y <- 'subject'
+  
   hits <- findOverlaps(x, y, 
                        maxgap = maxgap, 
                        minoverlap = minoverlap, 
@@ -40,7 +43,7 @@ find_overlaps_venn <- function(x, y,
                        ignore.strand = TRUE)
   
   hits_vectors <- .get_hits_vectors(x, y, hits)
-  names(hit_one_vector) <- c(label_x, label_y)
+  names(hit_vectors) <- c(label_x, label_y)
   
   ggVennDiagram::ggVennDiagram(hits_vectors,
                                stroke_size = 0.5,
