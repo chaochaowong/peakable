@@ -49,7 +49,6 @@ find_overlaps_venn <- function(x, y,
                                stroke_size = 0.5,
                                edge_lty = "blank",
                                edge_size = 0.5,
-                               label_txtWidth = 20,
                                label = 'both', ...) +
     scale_fill_gradient(high = "#046C9A", low = "#ABDDDE" ) +
     theme(legend.position = 'none')

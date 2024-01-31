@@ -37,7 +37,7 @@ read_seacr <- function(file) {
 summit_from_seacr <- function(seacr_gr, summit_wid = NULL) {
   # convert to seacr max.signal.region column to GRanges
   summit <- GRanges(gr$max.signal.region) %>%
-    plyranges::mutate(name = paste0('peakname_', 1:length(sub)),
+    plyranges::mutate(name = paste0('peakname_', 1:length(gr)),
                       score = gr$max.signal, 
                       itemRgb ='#0000FF')
   if (!is.null(summit_wid) & is.integer(summit_wid)) {
