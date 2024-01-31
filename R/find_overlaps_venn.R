@@ -2,8 +2,8 @@
   # need a unit test for this
   hits_strings <- paste0(queryHits(hits), '-', subjectHits(hits))  
   
-  left_hit <- rep('left', length.out=length(x))
-  right_hit <- rep('right', length.out=length(y))
+  left_hit <- paste0('left-', 1:length(x))
+  right_hit <- paste0('right-', 1:length(y))
 
   left_hit[queryHits(hits)] <- hits_strings
   right_hit[subjectHits(hits)] <- hits_strings
@@ -50,7 +50,7 @@ find_overlaps_venn <- function(x, y,
                                edge_lty = "blank",
                                edge_size = 0.5,
                                label_txtWidth = 20,
-                               label = 'both') +
+                               label = 'both', ...) +
     scale_fill_gradient(high = "#046C9A", low = "#ABDDDE" ) +
     theme(legend.position = 'none')
 }
