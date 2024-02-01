@@ -37,6 +37,7 @@ read_seacr <- function(file) {
 #' 
 #' @return a GRanges object with columns name and score (max.signal)
 #' @rdname extract_summit
+#' @importFrom plyranges mutate
 #' @examples
 #' seacr_file <- system.file('extdata',
 #'                           'chr2_Rep1_H1_CTCF.stringent.bed',
@@ -51,18 +52,23 @@ extract_summit_seacr <- function(gr, summit_wid = NULL) {
   
   if (!is.null(summit_wid) & !is.integer(summit_wid)) 
     summit_wid <- as.integer(summit_wid) 
-  if (!is.null(summit_wid) & summit_wid <= 0L) {
-    message('Summit width must be greater than 0L. Default to NULL')
-    summit_wid <- NULL
+    
+  if (!is.null(summit_wid)) {
+    if (summit_wid <= 0L) {
+      message('Summit width must be greater than 0L. Default to NULL')
+      summit_wid <- NULL
+    }
   }
   
-  if ('max.signal.region' %in% names(mcols(gr)))
-    stop('The metadata max.signal.region column does not exist.')
+  if (!'max.signal.region' %in% names(mcols(gr)))
+    stop('The metadata "max.signal.region" column does not exist.')
   
-  summit <- GRanges(gr$max.signal.region) %>%
-    plyranges::mutate(name = paste0('peakname_', 1:length(gr)),
-                      score = gr$max.signal, 
-                      itemRgb ='#0000FF')
+  summit <- GRanges(gr$max.signal.region) 
+  summit <- plyranges::mutate(summit, 
+                              name = paste0('peakname_', 1:length(gr)),
+                              AUC = gr$AUC,
+                              max.signal = gr$max.signal, 
+                              itemRgb ='#0000FF')
   
   if (!is.null(summit_wid) & is.integer(summit_wid)) {
     summit <- 

@@ -86,7 +86,7 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
                        width = summit_wid,
                        seqnames = seqnames(gr),
                        strand = '*')
-  summit <- plyranges(as_granges())
+  summit <- plyranges::as_granges(summit)
   mcols(summit) <- mcols(gr)[, names(mcols(gr)) != 'peak']
   summit
 }

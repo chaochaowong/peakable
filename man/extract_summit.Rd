@@ -20,9 +20,9 @@
 
 \details{
   
-  The \code{extract_summit_macs2} function extracts the "peak" column from the MACS2 narrowPeak \code{GRanges} and creates summit ranges as \code{GRanges}, while preserving all other columns.
+  The \code{extract_summit_macs2} function extracts the "peak" column from the MACS2 narrowPeak \code{GRanges} and creates summit range interval as \code{GRanges}, while preserving all other columns. The width is defaulted to 1L.
   
-  The \code{extract_summit_seacr} function extracts the "max.signal.region" from the SEACR peak \code{GRanges} and creates summit ranges as \code{GRanges}, with metadata colmns "name", for arbitrary peak names, and "score" as the "max.signal". The width of the "max.signal.region" is preserved, unless \code{summit_wid} is specified.
+  The \code{extract_summit_seacr} function extracts the "max.signal.region" from the SEACR peak \code{GRanges} and creates summit range intervals as \code{GRanges}, with metadata colmns "name", for arbitrary peak names, and the original "AUC" and "max.signal". The width of the "max.signal.region" is preserved, unless \code{summit_wid} is specified.
   }
 
 \value{
