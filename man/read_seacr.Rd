@@ -14,7 +14,7 @@
 }
 
 \details{
-  The resulting peak files by SEACR is not in the standard BED6 format. \code{read_seacr} parses the SEACR peak format and formats the ranges into GRanges along with columns, including "AUC", "max.signal", and "max.signal.region", in addition to "num" if provided. See https://github.com/FredHutch/SEACR/ for details. 
+  The resulting peak files by SEACR is not in the standard BED6 format. \code{read_seacr} parses the SEACR peak format and formats the ranges into GRanges along with columns, including "AUC", "max.signal", and "max.signal.region", in addition to "num" if provided. See \link{https://github.com/FredHutch/SEACR/} for details. 
 }
 
 \value{
@@ -26,14 +26,14 @@
 # SEACR peak BED file
 seacr_file <- system.file('extdata', 
                           'chr2_Rep1_H1_CTCF.stringent.bed', 
-                            package='peaklerrr')
+                          package='peaklerrr')
 gr <- read_seacr(seacr_file)
 gr
 
 }
 
 \references{
-  https://github.com/FredHutch/SEACR/
+  \link{https://github.com/FredHutch/SEACR/}
 }
 
 \keyword{function}

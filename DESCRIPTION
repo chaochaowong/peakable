@@ -1,7 +1,7 @@
 Package: peaklerrr
 Title: CUT&RUN-seq Peak caller QC 
 Description: functions perform peak caller QC
-Version: 0.99.4
+Version: 0.99.5
 LazyData: false
 Depends: R (>= 4.1.0), GenomicRanges 
 Imports: plyranges, rtracklayer, dplyr, ggVennDiagram, purrr, tibble
