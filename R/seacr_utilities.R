@@ -49,9 +49,11 @@ read_seacr <- function(file) {
 extract_summit_seacr <- function(gr, summit_wid = NULL) {
   # convert to SEACR peak max.signal.region column to GRanges
   
-  # santity check: mcols must have AUC, max.signal, max.signal.region
-  if (!all(c('AUC', 'max.signal', 'max.signal.region') %in% names(mcols(gr))))
-    stop('The metadata columns must contain SEACR-specific columns including AUC, max.signal, and max.signal.region')
+  # santity check: mcols must max.signal.region
+  flag <- all(c('AUC', 'max.signal', 'max.signal.region') %in% 
+                names(mcols(gr)))
+  if (flag %in% names(mcols(gr))))
+    stop('The metadata columns must contain SEACR-specific columns AUC, max.signal, max.signal.region')
   
   # validate summit_wid
   if (!is.null(summit_wid) & !is.integer(summit_wid)) 
@@ -64,16 +66,14 @@ extract_summit_seacr <- function(gr, summit_wid = NULL) {
     }
   }
   
-  if (!'max.signal.region' %in% names(mcols(gr)))
-    stop('The metadata "max.signal.region" column does not exist.')
-  
   summit <- GRanges(gr$max.signal.region) 
   summit <- plyranges::mutate(summit, 
                               name = paste0('peakname_', 1:length(gr)),
                               AUC = gr$AUC,
-                              max.signal = gr$max.signal, 
+                              max.signal = gr$max.signal,
                               itemRgb ='#0000FF')
   
+  # Ensure the width of summit conformed with the input setting
   if (!is.null(summit_wid) & is.integer(summit_wid)) {
     summit <- 
       plyranges::mutate(anchor_center(summit), width = summit_wid)
