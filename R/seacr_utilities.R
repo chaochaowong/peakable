@@ -49,7 +49,11 @@ read_seacr <- function(file) {
 extract_summit_seacr <- function(gr, summit_wid = NULL) {
   # convert to SEACR peak max.signal.region column to GRanges
   
+  # santity check: mcols must have AUC, max.signal, max.signal.region
+  if (!all(c('AUC', 'max.signal', 'max.signal.region') %in% names(mcols(gr))))
+    stop('The metadata columns must contain SEACR-specific columns including AUC, max.signal, and max.signal.region')
   
+  # validate summit_wid
   if (!is.null(summit_wid) & !is.integer(summit_wid)) 
     summit_wid <- as.integer(summit_wid) 
     
