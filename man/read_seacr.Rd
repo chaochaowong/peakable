@@ -6,11 +6,17 @@
 }
 
 \usage{
-  read_seacr(file)
+  read_seacr(file, 
+             drop_chrM = FALSE, 
+             keep_standard_chrom = FALSE,
+             species = NULL)
 }
 
 \arguments{
   \item{file}{A path to a file or a connection.}
+  \item{drop_chrM}{A logical value indicating whether to drop peaks of chromosome M. Default: FALSE.}
+  \item{keep_standard_chrom}{A logical value indicating whether to keep only standard seqlevels. Default: FALSE}
+  \item{species}{The species of the organism. Supported sepcies can bee seen with \code{names(genomeStyles())}.}
 }
 
 \details{
@@ -29,6 +35,13 @@ seacr_file <- system.file('extdata',
                           package='peaklerrr')
 gr <- read_seacr(seacr_file)
 gr
+
+# drop seqlevel chrM and only keep standard seqlevels
+gr <- read_seacr(seacr_file, 
+                 drop_chrM = TRUE, 
+                 keep_standard_chrom = TRUE,
+                 species = 'Homo_sapiens')
+gr                 
 
 }
 

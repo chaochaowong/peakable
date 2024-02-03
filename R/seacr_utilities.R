@@ -11,8 +11,12 @@
 #' gr <- read_seacr(seacr_file)
 #' gr
 #'
+#' @importFrom GenomeInfoDb dropSeqlevels keepStandardChromosomes seqlevelsStyle
+#' @importFrom plyranges as_granges
 #' @export
-read_seacr <- function(file) {
+read_seacr <- function(file, drop_chrM = FALSE,
+                       keep_standard_chrom = FALSE,
+                       species = NULL) {
   # sanity check
   stopifnot(length(file) == 1)
   stopifnot(file.exists(file)) 
@@ -26,9 +30,23 @@ read_seacr <- function(file) {
   if (length(tb) > 0) {
     names(tb) <- col_names[1:ncol(tb)]
     tb$strand <- '*'
-    plyranges::as_granges(tb, seqnames = chr)
+    gr <- plyranges::as_granges(tb, seqnames = chr)
+    
+    if (keep_standard_chrom)
+      gr <- GenomeInfoDb::keepStandardChromosomes(gr, 
+                                                  pruning.mode='coarse',
+                                                  species=species)
+    
+    if (drop_chrM) {
+      if (GenomeInfoDb::seqlevelsStyle(gr) == 'UCSC') value = 'chrM'
+      if (GenomeInfoDb::seqlevelsStyle(gr) == 'NCBI') value = 'M'
+      # if value (chrM or M) exists
+      if (value %in% seqlevels(gr)) 
+          gr <- GenomeInfoDb::dropSeqlevels(gr, value=value,
+                                            pruning.mode='coarse')
+    }
+    return(gr)
   }
-  
 }
 
 #' Exact SEACR peak summit and convert to a GRanges object
@@ -52,7 +70,7 @@ extract_summit_seacr <- function(gr, summit_wid = NULL) {
   # santity check: mcols must max.signal.region
   flag <- all(c('AUC', 'max.signal', 'max.signal.region') %in% 
                 names(mcols(gr)))
-  if (flag %in% names(mcols(gr))))
+  if (flag %in% names(mcols(gr)))
     stop('The metadata columns must contain SEACR-specific columns AUC, max.signal, max.signal.region')
   
   # validate summit_wid
