@@ -63,9 +63,9 @@ find_consensus_seacr <- function(x, y, minoverlap = NULL) {
 
 #' Find consensus of two SEACR peaks: a wrapping function of 
 #' plyranges::find_overlaps() and modify the metadata columns such as 
-#' AUC, max.signal and max.signal.regions
-#' @x right object representing SEACR peaks 
-#' @y left object representing SEACR peaks 
+#' 
+#' @x right object representing MACS2 narrow peaks 
+#' @y left object representing MACS2 narrow peaks 
 #' @minoverlap NULL
 #' 
 #' @return a GRanges object

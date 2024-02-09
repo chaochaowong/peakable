@@ -1,3 +1,7 @@
+importFrom(Rsamtools, BamFileList)
+importFrom(GenomicAlignments, GAlignmentPairs, summarizeOverlaps)
+
+
 export(read_macs2_narrow,
        read_macs2_broad,
        read_seacr)

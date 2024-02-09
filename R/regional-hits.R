@@ -8,23 +8,23 @@ consolidate_peaks <- function(grl) {
   gr <- unlist(as(grl, "GRangesList"))
   gr <- keepStandardChromosomes(gr, pruning.mode='coarse')
   mcols(gr) <- NULL
-  GenomicRanges::reduce(gr)
+  GenomicRanges::reduce(gr, ignore.strand=TRUE)
 }
 
-
+#' @importFrom Rsamtools BamFileList
+#' @importFrom GenomicAlignments summarizeOverlaps
 # script can be optimized; edit to improve efficiency
-peakCoverageMatrixRSE <- function(peakset_gr, sample_df, 
-                                  spike_in_norm = TRUE,
-                                  spike_in_factor = NULL) {
+peak_read_count <- function(features, sample_df, 
+                            spike_in_norm = FALSE) {
   # - sample_df is a data.frame must have sample_id, bam_file, aligned_paired, 
   #   and spike_in_factor (spike_nrom=TRUE) columns
   # - count reads hitting the peakset then normlized by spike_in_norm (if spike_norm=TRUE)
   require(GenomicAlignments)
   # sanity check: file existence; check sample_df columns
-  bam_files <- BamFileList(sample_df$bam_file)
+  bam_files <- Rsamtools::BamFileList(sample_df$bam_file)
   
   #grl <- GenomicAlignments::GAlignmentPairs(bam_files)
-  se <- summarizeOverlaps(features = peakset_gr,
+  se <- summarizeOverlaps(features = features,
                           reads = bam_files,
                           ignore.strand = TRUE,
                           singleEnd = FALSE,
@@ -33,17 +33,21 @@ peakCoverageMatrixRSE <- function(peakset_gr, sample_df,
                           inter.feature=FALSE)
   rownames(se) <- paste0('peakname_', 1:length(se))
   colData(se) <- DataFrame(sample_df)
+  colnames(se) <- sample_df$sample_id
+  
   se$reads <- colSums(assays(se)[['counts']])
   
-  if (spike_in_norm & !is.null(spike_in_factor)) {
-    assays(se)[['spikein_norm']] <- 
-      t(t(assays(se)[['counts']]) * sample_df$spikein_factor)
-    se$reads_spikein_norm <- se$reads * se$spikein_factor
+  if (spike_in_norm) {
+    if ('spike_in_factor' %in% names(colData(se))) {
+      assays(se)[['spike_in_norm']] <- 
+        t(t(assays(se)[['counts']]) * sample_df$spike_in_factor)
+      se$reads_spikein_norm <- se$reads * se$spike_in_factor
+    }
   }
   
   # if aligned_paried is available
-  if ('aligned_paired' %in% names(mcols(se))) {
-    se$FRiP <- se$reads / se$aligned_paired
+  if ('read_paired' %in% names(colData(se))) {
+    se$FRiP <- se$reads / se$read_paired
   }
   
   return(se)

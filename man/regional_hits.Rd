@@ -22,7 +22,7 @@
 }
 
 \details{
-  The \code{consolidated_peak_hits} function consolidates and merges a list of peaks or a \code{GRagnesList} into a \code{GRanges} object. Suppose there are m number of samples (length of the input \code{grl}) and n number of consolidated peaks,  \code{consolidated_peak_hits} constructs a n-by-m matrix with an entry of 1 if the sample's peak hit the consolidated peaks, and 0 otherwise. What can we do with this type of matrix?
+  The \code{consolidated_peak_hits} function consolidates and merges a list of peaks or a \code{GRagnesList} into a \code{GRanges} object. Suppose there are m number of samples (length of the input \code{grl}) and n number of consolidated peaks,  \code{consolidated_peak_hits} constructs a n-by-m matrix with an entry of 1 if a sample's peak hit the consolidated peaks, and 0 otherwise. What can we do with this type of matrix?
     
   The \code{consolidate_peaks} function consolidates (merges) and mergess a list of peaks or a \code{GRangesList} into a \code{GRanges} object.
   
