@@ -1,3 +1,8 @@
+#' @usage consolidate_peaks(grl)
+#' @param grl
+#' @grl A list of GRanges or a GRangeList object
+#' @return GRanges
+#'
 #' @importFeom GenomicRanges reduce
 #' @export
 consolidate_peaks <- function(grl) {
@@ -11,53 +16,13 @@ consolidate_peaks <- function(grl) {
   GenomicRanges::reduce(gr, ignore.strand=TRUE)
 }
 
-#' @importFrom Rsamtools BamFileList
-#' @importFrom GenomicAlignments summarizeOverlaps
-# script can be optimized; edit to improve efficiency
-peak_read_count <- function(features, sample_df, 
-                            spike_in_norm = FALSE) {
-  # - sample_df is a data.frame must have sample_id, bam_file, aligned_paired, 
-  #   and spike_in_factor (spike_nrom=TRUE) columns
-  # - count reads hitting the peakset then normlized by spike_in_norm (if spike_norm=TRUE)
-  require(GenomicAlignments)
-  # sanity check: file existence; check sample_df columns
-  bam_files <- Rsamtools::BamFileList(sample_df$bam_file)
-  
-  #grl <- GenomicAlignments::GAlignmentPairs(bam_files)
-  se <- summarizeOverlaps(features = features,
-                          reads = bam_files,
-                          ignore.strand = TRUE,
-                          singleEnd = FALSE,
-                          mode = "Union",
-                          fragments=FALSE,
-                          inter.feature=FALSE)
-  rownames(se) <- paste0('peakname_', 1:length(se))
-  colData(se) <- DataFrame(sample_df)
-  colnames(se) <- sample_df$sample_id
-  
-  se$reads <- colSums(assays(se)[['counts']])
-  
-  if (spike_in_norm) {
-    if ('spike_in_factor' %in% names(colData(se))) {
-      assays(se)[['spike_in_norm']] <- 
-        t(t(assays(se)[['counts']]) * sample_df$spike_in_factor)
-      se$reads_spikein_norm <- se$reads * se$spike_in_factor
-    }
-  }
-  
-  # if aligned_paried is available
-  if ('read_paired' %in% names(colData(se))) {
-    se$FRiP <- se$reads / se$read_paired
-  }
-  
-  return(se)
 
-}
-
+#'
+#' consolidated_peak_hits
 #' Construct a hit matrix of peaks against a collection of ranges
 #' 
 #' @regions: a GRanges object
-#' @peaks_grl: a list of GRanges or a GRangesList object representing peaks 
+#' @grl: a list of GRanges or a GRangesList object representing peaks 
 #' @min_overlap: minimal overal between peaks and regions
 #' 
 #' @return a matrix
@@ -77,6 +42,7 @@ consolidated_peak_hits <- function(grl, min_overlap = NULL) {
   if (is.null(grl))
     stop('The names of grl is NULL. The names should be the sample ID and must be given.')
   
+  #' consolidate all the peaks from grl; only keep standard chromosomes
   regions <- consolidate_peaks(grl)
   
   if (is.null(min_overlap))
@@ -90,15 +56,18 @@ consolidated_peak_hits <- function(grl, min_overlap = NULL) {
   return(mat)
 }
 
+
+#' regionhit_per_sample_mat
 #' @importFrom GenomeInfoDb keepStandardChromosomes
 #' @importFrom GenomicRanges countOverlaps
+#' @importFrom purrr map_dfc
 #' @export
 regionhit_per_sample_mat <- function(regions, grl, min_overlap = NULL) {
   # same as regional_hits
   # peaks_grl: peaks for each sample
   # regions: a GRanges object, usually merge peaks by a peak caller
   # make sure the seq leveql style of peaks and regions are compatible
-  if (is.null(grl))
+  if (is.null(names(grl)))
     names(grl) <- paste0('sample-', seq(1, length(grl)))
   
   regions <- keepStandardChromosomes(regions, pruning.mode="coarse")
@@ -109,7 +78,6 @@ regionhit_per_sample_mat <- function(regions, grl, min_overlap = NULL) {
   
   purrr::map_dfc(grl, function(pks) {
     pks <- keepStandardChromosomes(pks, pruning.mode="coarse")
-    #seqlevelsStyle(pks) <- 'Ensembl'
     cnt <- countOverlaps(query=regions, subject=pks, 
                          ignore.strand=TRUE,
                          type = 'any',
@@ -164,18 +132,5 @@ genehit_per_sample_mat <- function(ensdb, peaks_grl) {
   gene_per_sample = tmp[rowSums(tmp[, 1:(ncol(tmp)-2)]) > 0, ] 
 }
 
-#' @param mat, sample_info, n_pcs
-#' @importFrom tibble rownames_to_column
-#' @importFrom dplyr left_join
-.getPCA <- function(mat, sample_info=NULL, n_pcs=2) {
-  pca <- prcomp(mat, scale. = TRUE)
-  pcs <- as.data.frame(pca$rotation[, 1:n_pcs]) 
-  
-  if (!is.null(sample_info) & 'sample_id' %in% names(sample_info)) {
-    pcs <- pcs %>%
-      tibble::rownames_to_column(var='sample_id') %>%
-      dplyr::left_join(sample_info, by='sample_id')
-  }
-  return(pcs)
-}
+
 
