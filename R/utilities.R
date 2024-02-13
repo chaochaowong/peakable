@@ -31,3 +31,21 @@
   }
   return(pcs)
 }
+
+#' @parameter se A RangedSummarizedExperiment or DESeqDataSet object
+.estimate_FRiP_score <- function(se) {
+  stopifnot(is(se, "RangedSummarizedExperiment"))
+  se$FRiP <- se$reads / se$read_paired
+  
+  return(se)
+}
+
+.estimate_lib_size_factor <- function(se) {
+  stopifnot(is(se, "RangedSummarizedExperiment"))
+  if ('read_paired' %in% names(colData(se))) {
+    lib_mean <- mean(se$read_paired)
+    se$lib_size_factor <- se$read_paired / lib_mean
+  }
+  
+  return(se)
+}

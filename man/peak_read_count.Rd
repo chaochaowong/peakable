@@ -27,7 +27,7 @@
 
 
 \examples{
-  \donotrun{
+  \dontrun{
 # sample info
 bam_pattern <- '\\.bam$'
 bam_df <- data.frame(

@@ -37,22 +37,23 @@ peak_read_count <- function(features, sample_df,
   
   se$reads <- colSums(assays(se)[['counts']])
   
-  # include spike_in_norm assay
+  #' include spike_in_norm assay
   if (spike_in_norm) {
     if ('spike_in_factor' %in% names(colData(se))) {
       assays(se)[['spike_in_norm']] <- 
         .normalize_columns(mat = assays(se[['count']]),
                            norm_factor = se$spike_in_factor)
-      
+      # normalized "reads" by spike-in factor
       se$reads_spikein_norm <- se$reads * se$spike_in_factor
     }
   }
   
-  # CPM assay if read_paired is given
-  
-  # if aligned_paried is available
+  #' if read_paired (lib size) is available,
+  #' then give FRiP score and lib size factor for
+  #' linear normalization based on library size (read_paired)
   if ('read_paired' %in% names(colData(se))) {
-    se$FRiP <- se$reads / se$read_paired
+    se <- .estimate_FRiP_score(se) # Fraction of reads overlap with features
+    se <- .estimate_lib_size_factor(se) # can be used for normalization
   }
   
   return(se)
