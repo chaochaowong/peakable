@@ -15,6 +15,7 @@ peak_read_count <- function(features, sample_df,
   # - sample_df is a data.frame must have sample_id, bam_file, aligned_paired, 
   #   and spike_in_factor (spike_nrom=TRUE) columns
   # - count reads hitting the peakset then normlized by spike_in_norm (if spike_norm=TRUE)
+  stopifnot(is(sample_df, 'data.frame'))
   stopifnot('sample_id' %in% names(sample_df))
   stopifnot('bam_file' %in% names(sample_df))
   stopifnot(is(features, 'GRanges'))
@@ -30,7 +31,7 @@ peak_read_count <- function(features, sample_df,
                                          mode = "Union",
                                          fragments=FALSE,
                                          inter.feature=FALSE)
-  # tidy rownames and column data of se
+  #' tidy rownames and column data of se
   rownames(se) <- paste0('peakname_', 1:length(se))
   colData(se) <- DataFrame(sample_df)
   colnames(se) <- sample_df$sample_id
