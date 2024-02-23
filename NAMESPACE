@@ -6,6 +6,8 @@ importFrom(rtracklayer, import, export)
 importFrom(ggVennDiagram, ggVennDiagram)
 importFrom(purrr, map_df, map_dfc)
 importFrom(plyranges, find_overlaps)
+importFrom(dplyr, if_else)
+import(ggplot2)
 
 export(read_macs2_narrow,
        read_macs2_broad,

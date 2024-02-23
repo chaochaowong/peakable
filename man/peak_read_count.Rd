@@ -29,15 +29,15 @@
 \examples{
   \dontrun{
 # sample info
-bam_pattern <- '\\.bam$'
+bam_pattern <- "\\.bam$""
 bam_df <- data.frame(
-  bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
-                       full.names = TRUE, pattern='\\.bam$')) %>%
+  bed_file = list.files(system.file("extdata"", package = "peaklerrr"),
+                       full.names = TRUE, pattern="\\.bam$")) %>%
   dplyr::mutate(sample_id = 
                 stringr::str_replace(basename(bam_file), 
                 bam_pattern, ''))
                 
-seacr_pattern = '\\.stringent.bed$'                
+seacr_pattern = "\\.stringent.bed$"                
 bed_df <- peak_df <- data.frame(
   bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
                        full.names = TRUE, pattern=seacr_pattern)) %>%

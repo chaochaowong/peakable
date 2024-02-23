@@ -9,11 +9,12 @@
 #' 
 #' peak_bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
 #' peak_bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
-#' seacr_info <- peakle_flow(sample_df, bam_dir=bam_dir,
-#'                          bam_pattern = bam_pattern,
-#'                          peak_caller = 'SEACR-thres1p',
-#'                          peak_bed_dir = peak_bed_dir,
-#'                          peak_bed_pattern = peak_bed_pattern)
+#' seacr_info <- 
+#'   peaklerrr:::peakle_flow(sample_df, 
+#'                           result_dir, result_dir,
+#'                           peak_caller = 'SEACR-thres1p',
+#'                           peak_bed_dir = peak_bed_dir,
+#'                           peak_bed_pattern = peak_bed_pattern)
 #'      
 .set_bam_params <- function(result_dir) {
   #' ignore bam_dir and bam_pattern
@@ -62,7 +63,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         peak_bed_dir, 
                         peak_bed_pattern) {
   library(tidyverse)
-  library(purrr)
+  require(purrr)
+  require(BiocParallel)
   
   #' setting parameters:
   #' if result_dir is given, then use default bam directory

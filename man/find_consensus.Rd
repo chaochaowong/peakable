@@ -59,8 +59,8 @@ macs2_file_y <-
               'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
                 package='peaklerrr')
                             
-x <- peaklerrr::read_macs2_narrow(seacr_file_x)
-y <- peaklerrr::read_macs2_narrow(seacr_file_y)
+x <- peaklerrr::read_macs2_narrow(macs2_file_x)
+y <- peaklerrr::read_macs2_narrow(macs2_file_y)
 consensus <- find_consensus_macs2(x, y, minoverlap = 40L)
 consensus
 
