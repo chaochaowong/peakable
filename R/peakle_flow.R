@@ -4,18 +4,26 @@
 #' result_dir <- file.path(dir_header, 'Active',
 #'                         'lawlor_e/Shireen/CnT_Results',
 #'                         'A673_anthracyclines_240130')
-#' bam_pattern <- '\\.markedDup.filter.sort.bam$'
-#' bam_dir <- bam_dir <- file.path(result_dir, 'samtools_sort')
+#' sample_df <- read_csv(file.path(result_dir, 'data', 'nf-sample-sheet.csv'))                         
 #' 
 #' peak_bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
 #' peak_bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
-#' seacr_info <- 
+#' seacr <- 
 #'   peaklerrr:::peakle_flow(sample_df, 
 #'                           result_dir, result_dir,
 #'                           peak_caller = 'SEACR-thres1p',
 #'                           peak_bed_dir = peak_bed_dir,
 #'                           peak_bed_pattern = peak_bed_pattern)
-#'      
+#'
+#'  seacr_hit_mat <- peaklerrr::consolidated_peak_hits(seacr$grl)
+#' seacr_hit_pca <- 
+#'   peaklerrr:::.getPCA(seacr_hit_mat, 
+#'                       sample_info=seacr$df, n_pcs=2)
+#' ggplot(seacr_hit_pca, aes(x=PC1, y=PC2, 
+#'                          color=antibody, shape=treatment)) +
+#'   geom_point() + theme_minimal() +
+#'   labs(title='PCA: SEACR peak-hits matrix')
+#'   
 .set_bam_params <- function(result_dir) {
   #' ignore bam_dir and bam_pattern
   bam_dir <- file.path(result_dir, 'samtools_sort')
@@ -80,6 +88,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
       stats_pattern <- samtools_params$stats_pattern
   }
 
+  # check the input sample_df is valid
   
   # 1.a) bam files; sample_id is the basename with bam_patter replaced
   bam_df <- .get_list_files_and_sample_id(bam_dir, bam_pattern) %>%
@@ -101,9 +110,13 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     dplyr::mutate(sample_id = str_replace(basename(bed_file),
                                           peak_bed_pattern, ''),
                   peak_caller = peak_caller) %>%
-    dplyr::right_join(sample_df, by='sample_id')
+    dplyr::right_join(sample_df, by='sample_id') %>%
+    dplyr::filter(!is.na(bed_file)) # some IgG files do not have bed files
   
-  # 4) read the peak ranges
+  # 4) sanity check
+  if (nrow(peak_df) < 1)
+    stop('Cannot not fine the peak bed files for these samples.')
+  # 4) define the peak ranges
 
   if (str_detect(peak_caller, 'SEACR')) 
     peak_call_func <- peaklerrr::read_seacr
@@ -114,6 +127,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   
   message('Peak callers: ', peak_caller)
   message('Get peak ranges ...')
+  
   peak_grl <- bplapply(peak_df$bed_file, 
                        peak_call_func,
                        drop_chrM = TRUE,
