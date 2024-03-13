@@ -110,6 +110,9 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     dplyr::mutate(sample_id = str_replace(basename(bed_file),
                                           peak_bed_pattern, ''),
                   peak_caller = peak_caller) %>%
+    # if relaxed or stringedn compared with IgG, then tidy sample_id
+    dplyr::mutate(sample_id =  str_split(sample_id, '_vs_', 
+                                         simplify=TRUE)[, 1]) %>%
     dplyr::right_join(sample_df, by='sample_id') %>%
     dplyr::filter(!is.na(bed_file)) # some IgG files do not have bed files
   
