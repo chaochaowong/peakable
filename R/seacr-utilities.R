@@ -25,7 +25,7 @@ read_seacr <- function(file, drop_chrM = FALSE,
   col_names <- c("chr", "start", "end", "AUC", "max.signal", 
                  "max.signal.region", "num")
 
-  tb <- read.delim(file)
+  tb <- read.delim(file, header=FALSE)
   
   if (length(tb) > 0) {
     names(tb) <- col_names[1:ncol(tb)]

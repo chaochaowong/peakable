@@ -123,7 +123,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                                     simplify=TRUE)[, 2])
   }
   
-  # clean up peakcall_id
+  # tidyup and remove peakcall_id
   peak_df <- peak_df %>% dplyr::select(-peakcall_id)
   
   # 4) sanity check
