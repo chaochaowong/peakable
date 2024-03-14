@@ -21,13 +21,22 @@ read_seacr <- function(file, drop_chrM = FALSE,
   stopifnot(length(file) == 1)
   stopifnot(file.exists(file)) 
   
-  # define column names
+  # check if file is empty?
+  is_empty <- file.info(file)$size == 0
+  if (is_empty) return(NULL)
+  
+
+    # define column names
   col_names <- c("chr", "start", "end", "AUC", "max.signal", 
                  "max.signal.region", "num")
 
+  # If file empty, return an empty GRange()
+  is_empty <- file.info(file)$size == 0
+  if (is_empty) return(GRanges())
+  
   tb <- read.delim(file, header=FALSE)
   
-  if (length(tb) > 0) {
+  if (nrow(tb) > 0) {
     names(tb) <- col_names[1:ncol(tb)]
     tb$strand <- '*'
     gr <- plyranges::as_granges(tb, seqnames = chr)
@@ -47,6 +56,7 @@ read_seacr <- function(file, drop_chrM = FALSE,
     }
     return(gr)
   }
+  
 }
 
 #' Exact SEACR peak summit and convert to a GRanges object
