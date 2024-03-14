@@ -107,14 +107,24 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   peak_df <- data.frame(
     bed_file = list.files(peak_bed_dir, pattern=peak_bed_pattern,
                           full.name=TRUE)) %>%
-    dplyr::mutate(sample_id = str_replace(basename(bed_file),
+    dplyr::mutate(peakcall_id = str_replace(basename(bed_file),
                                           peak_bed_pattern, ''),
                   peak_caller = peak_caller) %>%
     # if relaxed or stringedn compared with IgG, then tidy sample_id
-    dplyr::mutate(sample_id =  str_split(sample_id, '_vs_', 
+    dplyr::mutate(sample_id =  str_split(peakcall_id, '_vs_', 
                                          simplify=TRUE)[, 1]) %>%
     dplyr::right_join(sample_df, by='sample_id') %>%
     dplyr::filter(!is.na(bed_file)) # some IgG files do not have bed files
+  
+  # additional column for the IgG file
+  if (str_detect(peak_caller, 'relaxed|stringent')) {
+    peak_df <- peak_df %>%
+      dplyr::mutate(IgG = str_split(peakcall_id, '_vs_', 
+                                    simplify=TRUE)[, 2])
+  }
+  
+  # clean up peakcall_id
+  peak_df <- peak_df %>% dplyr::select(-peakcall_id)
   
   # 4) sanity check
   if (nrow(peak_df) < 1)
