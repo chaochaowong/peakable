@@ -24,10 +24,14 @@
 #'   geom_point() + theme_minimal() +
 #'   labs(title='PCA: SEACR peak-hits matrix')
 #'   
-.set_bam_params <- function(result_dir) {
+.set_bam_params <- function(result_dir, bam_pattern) {
   #' ignore bam_dir and bam_pattern
   bam_dir <- file.path(result_dir, 'samtools_sort')
-  bam_pattern <- '\\.markedDup.filter.sort.bam$'
+
+  if (is.null(bam_pattern)) {
+    bam_pattern <- '\\.markedDup.filter.sort.bam$'
+  } 
+  
   #' sanity checK does the bam file exists?
   return(list(bam_dir = bam_dir, bam_pattern = bam_pattern))
 }
@@ -36,7 +40,7 @@
   #' ignore bam_dir and bam_pattern
   stats_dir <- file.path(result_dir, 'samtools_stats')
   stats_pattern <- '\\.markedDup.stats$'
-  #' sanity checK does the bam file exists?
+  #' sanity checK does stats_dir exists?
   return(list(stats_dir = stats_dir, stats_pattern = stats_pattern))
 }
 
@@ -69,7 +73,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         result_dir,
                         peak_caller, 
                         peak_bed_dir, 
-                        peak_bed_pattern) {
+                        peak_bed_pattern,
+                        bam_pattern = NULL) {
   library(tidyverse)
   require(purrr)
   require(BiocParallel)
@@ -80,7 +85,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     stop(result_dir, ' does not exist.')
   
   if (file.exists(result_dir)) {
-      bam_params <- .set_bam_params(result_dir)
+      
+      bam_params <- .set_bam_params(result_dir, bam_pattern)
       bam_dir <- bam_params$bam_dir
       bam_pattern <- bam_params$bam_pattern
       samtools_params <- .set_samtools_params(result_dir)
@@ -89,19 +95,28 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   }
 
   # check the input sample_df is valid
+  # check if stats_dir exists, if not, skip samtools stats
   
   # 1.a) bam files; sample_id is the basename with bam_patter replaced
   bam_df <- .get_list_files_and_sample_id(bam_dir, bam_pattern) %>%
     dplyr::rename(bam_file = 'file')
   
-  stats_df <- .samtools_stats(stats_dir, stats_pattern)
-  # 1.b) samtools stats: read pairs information
-  
+  # check if stats_dir exists
+  if (file.exists(stats_dir) ) {
+     stats_df <- .samtools_stats(stats_dir, stats_pattern)
+  } else {
+    stats_df <- NULL
+  }
+     
   
   # 2) append to sample_df; remove irrelavent columns
   sample_df <- sample_df %>%
-    dplyr::left_join(bam_df, by='sample_id') %>%
-    dplyr::left_join(stats_df, by='sample_id')
+    dplyr::left_join(bam_df, by='sample_id') 
+  
+  if (!is.null(stats_df)) {
+    sample_df <- sample_df %>%
+      dplyr::left_join(stats_df, by='sample_id')
+  }
   
   # 3) get peak bed files
   peak_df <- data.frame(
@@ -110,7 +125,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     dplyr::mutate(peakcall_id = str_replace(basename(bed_file),
                                           peak_bed_pattern, ''),
                   peak_caller = peak_caller) %>%
-    # if relaxed or stringedn compared with IgG, then tidy sample_id
+    # if relaxed or stringent compared with IgG, then tidy sample_id
     dplyr::mutate(sample_id =  str_split(peakcall_id, '_vs_', 
                                          simplify=TRUE)[, 1]) %>%
     dplyr::right_join(sample_df, by='sample_id') %>%
