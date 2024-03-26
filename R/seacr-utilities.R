@@ -41,12 +41,12 @@ read_seacr <- function(file, drop_chrM = FALSE,
     tb$strand <- '*'
     gr <- plyranges::as_granges(tb, seqnames = chr)
     
-    if (keep_standard_chrom)
+    if (keep_standard_chrom & length(gr) > 0)
       gr <- GenomeInfoDb::keepStandardChromosomes(gr, 
                                                   pruning.mode='coarse',
                                                   species=species)
     
-    if (drop_chrM) {
+    if (drop_chrM & length(gr) > 0) {
       if (GenomeInfoDb::seqlevelsStyle(gr) == 'UCSC') value = 'chrM'
       if (GenomeInfoDb::seqlevelsStyle(gr) == 'NCBI') value = 'M'
       # if value (chrM or M) exists
@@ -54,6 +54,7 @@ read_seacr <- function(file, drop_chrM = FALSE,
           gr <- GenomeInfoDb::dropSeqlevels(gr, value=value,
                                             pruning.mode='coarse')
     }
+    
     return(gr)
   }
   

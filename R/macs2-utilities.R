@@ -28,19 +28,20 @@ read_macs2_narrow <- function(file, drop_chrM = FALSE,
                             peak = "integer")
   
   gr <- rtracklayer::import(file, format = 'BED', 
-                      extraCols = extraCols_narrowPeak, ...) 
+                            extraCols = extraCols_narrowPeak, ...) 
   
-  if (keep_standard_chrom)
+  if (keep_standard_chrom & length(gr) > 0)
     gr <- GenomeInfoDb::keepStandardChromosomes(gr, pruning.mode='coarse',
                                                 species = species)
   
-  if (drop_chrM) {
+  if (drop_chrM & length(gr) > 0) {
     if (GenomeInfoDb::seqlevelsStyle(gr) == 'UCSC') value = 'chrM'
     if (GenomeInfoDb::seqlevelsStyle(gr) == 'NCBI') value = 'M'
     if (value %in% seqlevels(gr)) 
       gr <- GenomeInfoDb::dropSeqlevels(gr, value=value,
                                         pruning.mode='coarse')
   }
+  
   return(gr)
 }
 
