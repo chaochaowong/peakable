@@ -1,0 +1,299 @@
+---
+title: "template of CnR or CnT peak QC"
+author: "John Doe"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cosmo
+    number_sections: true
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
+    highlight: tango
+    fig_caption: true
+---
+
+
+<script>
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover();
+});
+</script>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval=FALSE, 
+                      echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.align = 'center',
+                      knitr.svg.object = TRUE,
+                      dev=c('png', 'svglite'))
+```
+
+```{r load-libraries}
+# load library
+library(tidyverse)
+library(plyranges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library(GenomicAlignments)
+library(rtracklayer)
+library(DESeq2) # differential analysis
+library(ChIPseeker) # annotation analysis
+library(ggplot2)
+
+# if using TxDb for annotation
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+txDb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
+# if using multi-cores
+library(BiocParallel)
+BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
+
+# local package by CJW
+library(peaklerrr)
+```
+
+```{r define-paths-and-variables}
+# define directories
+dir_header <- '///Volumes' # via MacBook
+result_dir <- 
+  file.path(dir_header, 'Active',
+            'sarthy_j/Sarthy/Sarthy_Lab/CUTRUN_Records',
+            'GBe3_novogene_CnT_results_20240222')
+
+Rproj_dir <- file.path(result_dir, 'R_proj')
+data_dir <- file.path(Rproj_dir, 'data')
+fig_dir <- file.path(Rproj_dir, 'figures')
+```
+
+```{r nf-sample-sheet-to-rds}
+# import nf sample sheet and save as 'sample_df.rds' in the
+# data directory
+
+sample_df <- read_csv(file.path(result_dir, 'data', 
+                            'nf-sample-sheet.csv'))
+saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
+```
+
+```{r load-and-tidy-sample-df}
+#' sample_df is originated from the nextflow sample sheet
+#' filter out IgG samples (Ab == NA)
+sample_df <- 
+  readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) %>%
+    tidyr::drop_na(Ab) %>%
+    dplyr::select(-single_end, -target_or_control, -read1, -read2)
+```
+
+```{r local-tools}
+# 1. get consensus name if the consensus if performed
+.get_consensus_name <- function(df) {
+  df %>%
+    group_by(Ab, cell_line) %>%
+    summarize(Ab=unique(Ab), cell_line= unique(cell_line)) %>%
+    dplyr::mutate(consensus = paste0(Ab, "-", cell_line)) %>%
+    pull(consensus)
+}
+```
+
+# MACS2
+
+The code chunk below uses `peaklerrr:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata. Note `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'. The `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`).
+
+```{r get-macs2-narrow-peaks}
+# use peakle_flow
+bed_dir <- file.path(result_dir, 'peaks_calls', 'macs2_callpeak')
+bed_pattern <- '\\_peaks.narrowPeak$'
+bam_pattern <- '\\.rmDup.filter.sort.bam$'
+# bam_pattern <- '\\.markedDup.filter.sort.bam$'
+
+macs2 <- # return: df and grl 
+  peaklerrr:::peakle_flow(sample_df = sample_df, 
+                          result_dir = result_dir,
+                          peak_caller = 'MACS2-narrow',
+                          peak_bed_dir = bed_dir, 
+                          peak_bed_pattern = bed_pattern,
+                          bam_pattern = bam_pattern) 
+
+# consensus
+macs2_consensus <- macs2$df %>%
+  group_split(Ab, cell_line) %>%
+  map(function(df) {
+    x <- macs2$grl[[df$sample_id[1]]]
+    y <- macs2$grl[[df$sample_id[2]]]
+    if (length(x) > 0 & length(y) > 0)
+        peaklerrr::find_consensus_macs2(x, y)
+    else GRanges()
+  })
+names(macs2_consensus) <- .get_consensus_name(macs2$df)
+
+saveRDS(macs2, file=file.path(data_dir, "macs2.rds"))
+saveRDS(macs2_consensus, 
+        file=file.path(data_dir, 'macs2_consensus.rds'))
+```
+
+```{r load-peak-rds}
+# load peaks 
+macs2 <- readRDS(file.path(data_dir, "macs2.rds"))
+macs2_consensus <- readRDS(file.path(data_dir, 
+                                     'macs2_consensus.rds'))
+```
+
+```{r macs2-hit-mat}
+# tokenize the hits on the corpus features and construct the hit matrix
+macs2_hit_mat <- 
+  peaklerrr::consolidated_peak_hits(macs2$grl)
+```
+
+## Peak numbers
+```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log2. Threshold: q-value = 0.01.'}
+# viz peak number by bar plot
+macs2$df %>%
+  dplyr::arrange(Ab, cell_line) %>%
+  dplyr::mutate(sample_id = factor(sample_id, levels=sample_id)) %>%
+  ggplot(aes(y=sample_id, x=number_of_peaks, 
+             color=Ab, fill=Ab)) +
+    geom_bar(width=0.8, alpha = 0.8, stat="identity") +
+    geom_text(aes(label=number_of_peaks), 
+              vjust=0.5, hjust=1, color="white", size=3) +
+    theme_minimal() +
+    theme(#panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          legend.position = 'top')  +
+  labs(title='MACS2 narrow peak numbers') +
+  scale_x_continuous(trans='log2') +
+  theme(legend.position = 'none')
+```
+
+## PCA on peak hits
+
+- Construct a n-by-m hit matrix of peaks against a collection of peakets, with entry 1 if a sample's peak hit the consolidated peaks and 0 otherwise. $n$ is the number of consolidated peaks and $m$ is the number of the samples
+- Perform PCA on the hit matrix to obtain an overview of the peaks overlap/non-overlap variation across groups, histone marks, or treatments
+
+```{r macs2-pca-peak-hits}
+# viz consolidated peak hits by PCA
+# remove BRD9
+macs2_hit_mat <- macs2_hit_mat[, colSums(macs2_hit_mat) > 0]
+
+tmp <- macs2$df %>%
+  dplyr::filter(sample_id %in% names(macs2_hit_mat)) %>%
+  dplyr::mutate(Ab = factor(Ab))
+
+macs2_hit_pca <- 
+  peaklerrr:::.getPCA(macs2_hit_mat, 
+                      sample_info=tmp, n_pcs=2)
+n_levels <- length(levels(tmp$Ab))
+
+ggplot(macs2_hit_pca, aes(x=PC1, y=PC2, 
+                          color=Ab, shape=Ab)) +
+  geom_point() +
+  theme_light() +
+  facet_wrap(~cell_line, nrow=2, scales='free') +
+  scale_shape_manual(values=1:n_levels) +
+  labs(title='PCA: MACS2 peak-hit')
+```
+
+## Replicate similarity
+
+The code chuck below assumes the samples only have duplicates. You will have to modify the code if you have triplicates.
+
+```{r macs-cos-sim}
+#' (1) build hit mat between duplicates
+#' (2) cos similarity
+cos_sim <- macs2$df %>%
+  group_split(Ab, cell_line) %>%
+  map_dfr(function(x) {
+    if (any(x$number_of_peaks == 0))
+      sim <- 0
+    
+    if (all(x$number_of_peaks > 0)) {
+      hit_map <- 
+        peaklerrr::consolidated_peak_hits(macs2$grl[x$sample_id])
+      sim <- peaklerrr:::cos_similarity(x=hit_map[, 1, drop=TRUE],
+                                        y=hit_map[, 2, drop=TRUE])
+    }
+    
+    data.frame(Ab = x$Ab[1],
+               cell_line = x$cell_line[1],
+               name = paste(x$sample_id, collapse = '-vs-'),
+               cos_sim = sim)
+  })
+```
+
+
+```{r viz-macs-cos-sim}
+cos_sim %>%
+  ggplot(aes(x=cos_sim, y=Ab)) +
+    geom_point() +
+    geom_segment(aes(x=0, y=Ab, xend=cos_sim, 
+                     yend=Ab), color='grey50') +
+    theme_light() +
+    facet_wrap(~cell_line, nrow=2) +
+    labs(title='cos similarity')
+```
+
+## Consensus peaks
+Display consensus peak numbers
+
+```{r macs2-consensus-peak-number}
+df <- data.frame(sample_id = names(macs2_consensus),
+                 number_of_consensus_peaks= 
+                   sapply(macs2_consensus, length)) %>%
+  dplyr::mutate(Ab = 
+                  str_split(sample_id, "-", simplify=TRUE)[, 1],
+                cell_line = 
+                  str_split_fixed(sample_id, "-", n=2)[, 2]) %>%
+  dplyr::arrange(Ab, cell_line) %>%
+  dplyr::mutate(sample_id = factor(sample_id, levels=sample_id))
+
+ggplot(df, aes(x=number_of_consensus_peaks, y=sample_id,
+               color=Ab, fill=Ab)) +
+  geom_bar(width=0.8, alpha = 0.8, stat="identity") +
+  geom_text(aes(label=number_of_consensus_peaks), 
+            vjust=0.5, hjust=1, color="white", size=3) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank()) +
+  labs(title='MACS2 replicates consensus peak numbers') +
+  scale_x_continuous(trans='log2') +
+  theme(legend.position = 'none')
+```
+
+## Functional annotation and feature distribution
+- Use `ChIPseeker` to annotate the consensus peaks
+- Plot feature distribution
+
+```{r macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs'}
+# how many known genes
+# how many unique genes' TSS it binds to?
+macs2_annolst_M07e <- bplapply(macs2_consensus,
+                     ChIPseeker::annotatePeak,
+                     tssRegion=c(-3000, 3000),
+                     TxDb=txDb, annoDb="org.Hs.eg.db")
+
+plotAnnoBar(macs2_annolst_M07e)
+```
+
+
+# SEACR
+
+Code chunks in this section would be mostly similar to the previous one.
+```{r use-peak-flow-get-seacr-peaks}
+# get import SEACR bed files 
+bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
+bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
+# bam_pattern <- '\\.markedDup.filter.sort.bam$'
+bam_pattern <- '\\.rmDup.filter.sort.bam$'
+
+#' use the peakle_flow to return seacr$df (info) and 
+#' seacr$grl (peak ranges)
+seacr <- 
+  peaklerrr:::peakle_flow(sample_df, # must be from nf_sample_sheet
+                          result_dir = result_dir,
+                          peak_caller = 'SEACR-thres1p',
+                          peak_bed_dir = bed_dir, 
+                          peak_bed_pattern = bed_pattern,
+                          bam_pattern = bam_pattern) 
+# pick one per sample_id
+saveRDS(seacr, file.path(data_dir, 'seacr_thres1p.rds'))
+```
