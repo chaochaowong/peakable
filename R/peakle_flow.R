@@ -84,15 +84,16 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   if (!file.exists(result_dir))
     stop(result_dir, ' does not exist.')
   
-  if (file.exists(result_dir)) {
-      
-      bam_params <- .set_bam_params(result_dir, bam_pattern)
-      bam_dir <- bam_params$bam_dir
-      bam_pattern <- bam_params$bam_pattern
-      samtools_params <- .set_samtools_params(result_dir)
-      stats_dir <- samtools_params$stats_dir
-      stats_pattern <- samtools_params$stats_pattern
-  }
+  if (!file.exists(peak_bed_dir))
+    stop(peak_bed_dir, ' does not exist.')
+  
+  # define parameters and patterns
+  bam_params <- .set_bam_params(result_dir, bam_pattern)
+  bam_dir <- bam_params$bam_dir
+  bam_pattern <- bam_params$bam_pattern
+  samtools_params <- .set_samtools_params(result_dir)
+  stats_dir <- samtools_params$stats_dir
+  stats_pattern <- samtools_params$stats_pattern
 
   # check the input sample_df is valid
   # check if stats_dir exists, if not, skip samtools stats

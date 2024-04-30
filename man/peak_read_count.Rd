@@ -1,4 +1,4 @@
-\name{peak_read_count}
+org.Hs.eg.db\name{peak_read_count}
 \alias{peak_read_count}
 \title{Perform counting paired-end mapped read on peak ranges}
 \description{
@@ -32,7 +32,7 @@
 bam_pattern <- "\\.bam$""
 bam_df <- data.frame(
   bed_file = list.files(system.file("extdata"", package = "peaklerrr"),
-                       full.names = TRUE, pattern="\\.bam$")) %>%
+                       full.names = TRUE, pattern="\\.bam$")) \%>\%
   dplyr::mutate(sample_id = 
                 stringr::str_replace(basename(bam_file), 
                 bam_pattern, ''))
@@ -40,7 +40,7 @@ bam_df <- data.frame(
 seacr_pattern = "\\.stringent.bed$"                
 bed_df <- peak_df <- data.frame(
   bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
-                       full.names = TRUE, pattern=seacr_pattern)) %>%
+                       full.names = TRUE, pattern=seacr_pattern)) \%>\%
   dplyr::mutate(sample_id = 
                 stringr::str_replace(basename(bed_file), 
                 seacr_pattern, ''))         
@@ -50,7 +50,7 @@ bed_df <- peak_df <- data.frame(
 sample_info <- data.frame(
   sample_id = c('chr2_Rep1_H1_CTCF', 'chr2_Rep2_H1_CTCF',
                 'chr2_Rep1_H1_H3K4me3', 'chr2_Rep2_H1_H3K4me3'),
-  antibody = c('CTCF', 'CTCF', 'H3K4me3', 'H3K4me3')) %>%
+  antibody = c('CTCF', 'CTCF', 'H3K4me3', 'H3K4me3')) \%>\%
   dplyr::left_join(bam_df, by='sample_id') %>%
   dplyr::left_join(bed_df, by='sample_id')
   

@@ -1,5 +1,5 @@
 ---
-title: "template of CnR or CnT peak QC"
+title: "GEBe4 CnT peak QC and analysis"
 author: "John Doe"
 date: "`r Sys.Date()`"
 output:
@@ -61,7 +61,7 @@ dir_header <- '///Volumes' # via MacBook
 result_dir <- 
   file.path(dir_header, 'Active',
             'sarthy_j/Sarthy/Sarthy_Lab/CUTRUN_Records',
-            'GBe3_novogene_CnT_results_20240222')
+            'Sarthy_04052024_CN_GB_CnR_CnT_SKdemux_GBsamples')
 
 Rproj_dir <- file.path(result_dir, 'R_proj')
 data_dir <- file.path(Rproj_dir, 'data')
@@ -99,7 +99,7 @@ sample_df <-
 
 # MACS2
 
-The code chunk below uses `peaklerrr:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata. Note `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'. The `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`).
+The code chunk below uses `peaklerrr:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata (extracted from the _Nextflow_ sample sheet). Note `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'. The `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`).
 
 ```{r get-macs2-narrow-peaks}
 # use peakle_flow
