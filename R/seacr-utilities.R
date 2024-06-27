@@ -60,6 +60,23 @@ read_seacr <- function(file, drop_chrM = FALSE,
   
 }
 
+write_seacr <- function(x, file) {
+  extra_cols <- c('AUC', 'max.signal',  'max.signal.region')
+  valid_seacr <- all(extra_cols %in% names(mcols(x)))
+  if (!valid_seacr) {
+    stop(paste("For a valid SEACR peak there must be columns called:", 
+               paste(extra_cols, collapse = ","), "in x."), call. = FALSE)
+  }
+  seacr_col_order <- c("seqnames", "start", "end", 
+                    "AUC", "max.signal",  "max.signal.region")
+  seacr_df <- as.data.frame(x)[, seacr_col_order]
+  utils::write.table(seacr_df, file,
+                     sep = "\t", row.names = FALSE,
+                     col.names=FALSE,
+                     na = ".", 
+                     quote = FALSE)
+}
+
 #' Exact SEACR peak summit and convert to a GRanges object
 #' @gr: A GRanges representing a peaks yield by SEACR, and it should include the 'max.signal.region' in the metadata columns
 #' @summit_wid: NULL (default) or positive integer indicating the width of summit. Default to the width of 'max.signal.region'

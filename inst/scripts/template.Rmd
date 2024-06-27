@@ -1,5 +1,5 @@
 ---
-title: "GEBe4 CnT peak QC and analysis"
+title: "JFSe5 JFS2408-2435 M07 and WSU-AML peak QC"
 author: "John Doe"
 date: "`r Sys.Date()`"
 output:
