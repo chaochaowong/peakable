@@ -118,12 +118,10 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
   if (summit_wid <= 0L)
     stop('Summit width must be greater than 0L.')
   
-  
-  summit <- data.frame(start=start(gr) + gr$peak,
-                       width = summit_wid,
-                       seqnames = seqnames(gr),
-                       strand = '*')
-  summit <- plyranges::as_granges(summit)
-  mcols(summit) <- mcols(gr)[, names(mcols(gr)) != 'peak']
+  # assuming the peak is not strand-sensitive
+  summit <- gr %>%
+    plyranges::mutate(start = start + peak, width=1L) 
+  summit <- plyranges::mutate(anchor_center(summit), width=summit_wid)
+  mcols(summit) <- mcols(summit)[, names(mcols(summit)) != 'peak']
   summit
 }
