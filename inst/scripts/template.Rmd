@@ -1,5 +1,5 @@
 ---
-title: "JFSe5 JFS2408-2435 M07 and WSU-AML peak QC"
+title: "CZe1 SFB3B1 WT/KO peaks QC and downstream analysios"
 author: "John Doe"
 date: "`r Sys.Date()`"
 output:
@@ -74,16 +74,19 @@ fig_dir <- file.path(Rproj_dir, 'figures')
 # data directory
 
 sample_df <- read_csv(file.path(result_dir, 'data', 
-                            'nf-sample-sheet.csv'))
+                            'nf-sample-sheet.csv')) %>%
+  #tidyr::drop_na(antibody) %>%
+  dplyr::filter(!antibody == 'IgG') %>%
+  dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
+
 saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
 ```
 
 ```{r load-and-tidy-sample-df}
 #' sample_df is originated from the nextflow sample sheet
-#' filter out IgG samples (Ab == NA)
 sample_df <- 
   readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) %>%
-    tidyr::drop_na(Ab) %>%
+    tidyr::drop_na(antibody) %>%
     dplyr::select(-single_end, -target_or_control, -read1, -read2)
 ```
 
@@ -91,9 +94,9 @@ sample_df <-
 # 1. get consensus name if the consensus if performed
 .get_consensus_name <- function(df) {
   df %>%
-    group_by(Ab, cell_line) %>%
-    summarize(Ab=unique(Ab), cell_line= unique(cell_line)) %>%
-    dplyr::mutate(consensus = paste0(Ab, "-", cell_line)) %>%
+    group_by(antibody, cell_line) %>%
+    summarize(antibody=unique(antibody), cell_line= unique(cell_line)) %>%
+    dplyr::mutate(consensus = paste0(antibody, "-", cell_line)) %>%
     pull(consensus)
 }
 ```
@@ -104,10 +107,10 @@ The code chunk below uses `peakable:::peakle_flow()` to import peak ranges (`grl
 
 ```{r get-macs2-narrow-peaks}
 # use peakle_flow
-bed_dir <- file.path(result_dir, 'peaks_calls', 'macs2_callpeak')
+bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
 bed_pattern <- '\\_peaks.narrowPeak$'
-bam_pattern <- '\\.rmDup.filter.sort.bam$'
-# bam_pattern <- '\\.markedDup.filter.sort.bam$'
+# bam_pattern <- '\\.rmDup.filter.sort.bam$'
+bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 macs2 <- # return: df and grl 
   peakable:::peakle_flow(sample_df = sample_df, 
@@ -118,8 +121,9 @@ macs2 <- # return: df and grl
                           bam_pattern = bam_pattern) 
 
 # consensus
-macs2_consensus <- macs2$df %>%
-  group_split(Ab, cell_line) %>%
+macs2_consensus <- list()
+macs2_consensus$grl <- macs2$df %>%
+  group_split(antibody, cell_line) %>%
   map(function(df) {
     x <- macs2$grl[[df$sample_id[1]]]
     y <- macs2$grl[[df$sample_id[2]]]
@@ -128,6 +132,9 @@ macs2_consensus <- macs2$df %>%
     else GRanges()
   })
 names(macs2_consensus) <- .get_consensus_name(macs2$df)
+macs2_consensus$df <- 
+  data.frame(sample_id = names(macs2_narrow_consensus$grl),
+             number_of_peaks = sapply(macs2_narrow_consensus$grl, length))
 
 saveRDS(macs2, file=file.path(data_dir, "macs2.rds"))
 saveRDS(macs2_consensus, 
@@ -151,10 +158,10 @@ macs2_hit_mat <-
 ```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log2. Threshold: q-value = 0.01.'}
 # viz peak number by bar plot
 macs2$df %>%
-  dplyr::arrange(Ab, cell_line) %>%
+  dplyr::arrange(antibody, cell_line) %>%
   dplyr::mutate(sample_id = factor(sample_id, levels=sample_id)) %>%
   ggplot(aes(y=sample_id, x=number_of_peaks, 
-             color=Ab, fill=Ab)) +
+             color=antiboy, fill=antibody)) +
     geom_bar(width=0.8, alpha = 0.8, stat="identity") +
     geom_text(aes(label=number_of_peaks), 
               vjust=0.5, hjust=1, color="white", size=3) +
@@ -179,15 +186,15 @@ macs2_hit_mat <- macs2_hit_mat[, colSums(macs2_hit_mat) > 0]
 
 tmp <- macs2$df %>%
   dplyr::filter(sample_id %in% names(macs2_hit_mat)) %>%
-  dplyr::mutate(Ab = factor(Ab))
+  dplyr::mutate(antibody = factor(antibody))
 
 macs2_hit_pca <- 
   peakable:::.getPCA(macs2_hit_mat, 
                       sample_info=tmp, n_pcs=2)
-n_levels <- length(levels(tmp$Ab))
+n_levels <- length(levels(tmp$antibody))
 
 ggplot(macs2_hit_pca, aes(x=PC1, y=PC2, 
-                          color=Ab, shape=Ab)) +
+                          color=anbibody, shape=antibody)) +
   geom_point() +
   theme_light() +
   facet_wrap(~cell_line, nrow=2, scales='free') +
@@ -203,7 +210,7 @@ The code chuck below assumes the samples only have duplicates. You will have to 
 #' (1) build hit mat between duplicates
 #' (2) cos similarity
 cos_sim <- macs2$df %>%
-  group_split(Ab, cell_line) %>%
+  group_split(antibody, cell_line) %>%
   map_dfr(function(x) {
     if (any(x$number_of_peaks == 0))
       sim <- 0
@@ -215,7 +222,7 @@ cos_sim <- macs2$df %>%
                                         y=hit_map[, 2, drop=TRUE])
     }
     
-    data.frame(Ab = x$Ab[1],
+    data.frame(antibody = x$antibody[1],
                cell_line = x$cell_line[1],
                name = paste(x$sample_id, collapse = '-vs-'),
                cos_sim = sim)
@@ -225,10 +232,10 @@ cos_sim <- macs2$df %>%
 
 ```{r viz-macs-cos-sim}
 cos_sim %>%
-  ggplot(aes(x=cos_sim, y=Ab)) +
+  ggplot(aes(x=cos_sim, y=antibody)) +
     geom_point() +
-    geom_segment(aes(x=0, y=Ab, xend=cos_sim, 
-                     yend=Ab), color='grey50') +
+    geom_segment(aes(x=0, y=antibody, xend=cos_sim, 
+                     yend=antibody), color='grey50') +
     theme_light() +
     facet_wrap(~cell_line, nrow=2) +
     labs(title='cos similarity')

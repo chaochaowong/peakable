@@ -10,7 +10,6 @@ importFrom(tibble, add_column)
 import(GenomicRanges, plyranges)
 import(dplyr)
 import(ggplot2)
-import(S4Vectors)
 
 export(read_macs2_narrow,
        read_macs2_broad,
