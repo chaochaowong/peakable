@@ -1,13 +1,13 @@
-org.Hs.eg.db\name{peak_read_count}
+\name{peak_read_count}
 \alias{peak_read_count}
 \title{Perform counting paired-end mapped read on peak ranges}
 \description{
-  A wrapper function of \code{GenomicAlignments::summarizeOverlaps} for faciliting read counting for peak ranges. 
+  A wrapper function of \code{GenomicAlignments::summarizeOverlaps} for faciliting read counting for peak ranges.
 }
 
 \usage{
-  peak_read_count(features, 
-                  sample_df, 
+  peak_read_count(features,
+                  sample_df,
                   spike_in_norm = FALSE)
 }
 
@@ -33,18 +33,18 @@ bam_pattern <- "\\.bam$""
 bam_df <- data.frame(
   bed_file = list.files(system.file("extdata"", package = "peakable"),
                        full.names = TRUE, pattern="\\.bam$")) \%>\%
-  dplyr::mutate(sample_id = 
-                stringr::str_replace(basename(bam_file), 
+  dplyr::mutate(sample_id =
+                stringr::str_replace(basename(bam_file),
                 bam_pattern, ''))
-                
-seacr_pattern = "\\.stringent.bed$"                
+
+seacr_pattern = "\\.stringent.bed$"
 bed_df <- peak_df <- data.frame(
   bed_file = list.files(system.file('extdata', package = 'peakable'),
                        full.names = TRUE, pattern=seacr_pattern)) \%>\%
-  dplyr::mutate(sample_id = 
-                stringr::str_replace(basename(bed_file), 
-                seacr_pattern, ''))         
-                
+  dplyr::mutate(sample_id =
+                stringr::str_replace(basename(bed_file),
+                seacr_pattern, ''))
+
 # 2) get sample information
 
 sample_info <- data.frame(
@@ -53,17 +53,17 @@ sample_info <- data.frame(
   antibody = c('CTCF', 'CTCF', 'H3K4me3', 'H3K4me3')) \%>\%
   dplyr::left_join(bam_df, by='sample_id') %>%
   dplyr::left_join(bed_df, by='sample_id')
-  
-# define feature: 
+
+# define feature:
 
 x <- peakable::read_seacr(sample_info$bed_file[1])
-y <- peakable::read_seacr(sample_info$bed_file[3]) 
+y <- peakable::read_seacr(sample_info$bed_file[3])
 features <- GenomicRanges::reduce(x, y)
 
-# count reads for peak ranges              
-se <- peak_read_count(features, sample_df, 
+# count reads for peak ranges
+se <- peak_read_count(features, sample_df,
                       spike_in_norm = FALSE)
-se            
+se
 
 # visualize the correlation: Pearson and PCA
 

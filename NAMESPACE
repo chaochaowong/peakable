@@ -1,13 +1,16 @@
 importFrom(Rsamtools, BamFileList)
+importFrom(Biostrings, getSeq, writeXStringSet)
 importFrom(GenomicAlignments, GAlignmentPairs, summarizeOverlaps)
 importFrom(GenomeInfoDb, keepStandardChromosomes, dropSeqlevels)
-importFrom(GenomicRanges, reduce, countOverlaps)
 importFrom(rtracklayer, import, export)
 importFrom(ggVennDiagram, ggVennDiagram)
 importFrom(purrr, map_df, map_dfc)
-importFrom(plyranges, find_overlaps)
-importFrom(dplyr, if_else)
+importFrom(tibble, add_column)
+
+import(GenomicRanges, plyranges)
+import(dplyr)
 import(ggplot2)
+import(S4Vectors)
 
 export(read_macs2_narrow,
        read_macs2_broad,
@@ -17,7 +20,7 @@ export(read_macs2_narrow,
 export(extract_summit_macs2,
        extract_summit_seacr)
 
-export(consolidate_peaks, 
+export(consolidate_peaks,
        consolidated_peak_hits,
        regionhit_per_sample_mat)
 
