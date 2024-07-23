@@ -35,7 +35,7 @@
 narrow_file <- 
   system.file('extdata', 
               'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
-               package='peaklerrr')
+               package='peakable')
 gr <- read_macs2_narrow(narrow_file)
 summit_macs2 <- extract_summit_macs2(gr)
 summit_macs2
@@ -44,7 +44,7 @@ summit_macs2
 seacr_file <- 
   system.file('extdata', 
               'chr2_Rep1_H1_CTCF.stringent.bed', 
-              package='peaklerrr')
+              package='peakable')
 gr <- read_seacr(seacr_file)
 summit_seacr <- extract_summit_seacr(gr)
 summit_seacr

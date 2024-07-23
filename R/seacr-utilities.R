@@ -95,7 +95,7 @@ write_seacr <- function(x, file) {
 extract_summit_seacr <- function(gr, summit_wid = NULL) {
   # convert to SEACR peak max.signal.region column to GRanges
   
-  # santity check: mcols must max.signal.region
+  # sanity check if it is SEACR peak: mcols must max.signal.region
   flag <- all(c('AUC', 'max.signal', 'max.signal.region') %in% 
                 names(mcols(gr)))
   if (flag %in% names(mcols(gr)))

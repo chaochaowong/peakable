@@ -44,7 +44,7 @@
 # MACS2 narrowPeaks
 narrow_file <- system.file('extdata', 
                            'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
-                            package='peaklerrr')
+                            package='peakable')
 gr <- read_macs2_narrow(narrow_file)
 gr
 
@@ -58,7 +58,7 @@ gr
 # MACS2 broadPeaks
 broad_file <- system.file('extdata', 
                           'chr2_Rep1_H1_H3K27me3_peaks.broadPeak',
-                           package='peaklerrr')
+                           package='peakalbe')
 gr <- read_macs2_broad(broad_file)
 gr
 

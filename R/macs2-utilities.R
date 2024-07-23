@@ -111,7 +111,7 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
   
   # check mcols are MACS2-specific
   if (!'peak' %in% names(mcols(gr)))
-    stop('gr must contain MACS2-specific column "peak".')
+    stop('gr must contain MACS2 narrowPeak specific column "peak".')
   
   if (is.null(summit_wid)) summit_wid <- 1L
   if (!is.integer(summit_wid)) summit_wid <- as.integer(summit_wid) 
@@ -123,5 +123,6 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
     plyranges::mutate(start = start + peak, width=1L) 
   summit <- plyranges::mutate(anchor_center(summit), width=summit_wid)
   mcols(summit) <- mcols(summit)[, names(mcols(summit)) != 'peak']
-  summit
+  
+  return(summit)
 }

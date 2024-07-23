@@ -35,14 +35,14 @@
 seacr_file_x <- 
   system.file('extdata',
               'chr2_Rep1_H1_CTCF.stringent.bed',
-              package='peaklerrr')
+              package='peakable')
 seacr_file_y <- 
   system.file('extdata',
               'chr2_Rep2_H1_CTCF.stringent.bed',
-              package='peaklerrr')
+              package='peakable')
                             
-x <- peaklerrr::read_seacr(seacr_file_x)
-y <- peaklerrr::read_seacr(seacr_file_y)
+x <- peakable::read_seacr(seacr_file_x)
+y <- peakable::read_seacr(seacr_file_y)
 consensus <- find_consensus_seacr(x, y, minoverlap = 40L)
 consensus
  
@@ -53,14 +53,14 @@ consensus
 macs2_file_x <- 
   system.file('extdata',
               'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
-               package='peaklerrr')
+               package='peakable')
 macs2_file_y <- 
   system.file('extdata',
               'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
-                package='peaklerrr')
+                package='peakable')
                             
-x <- peaklerrr::read_macs2_narrow(macs2_file_x)
-y <- peaklerrr::read_macs2_narrow(macs2_file_y)
+x <- peakable::read_macs2_narrow(macs2_file_x)
+y <- peakable::read_macs2_narrow(macs2_file_y)
 consensus <- find_consensus_macs2(x, y, minoverlap = 40L)
 consensus
 

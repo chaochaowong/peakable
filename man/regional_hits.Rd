@@ -41,7 +41,7 @@ library(dplyr)
 library(ggplot2)
 seacr_pattern = '\\.stringent.bed$'
 peak_df <- data.frame(
-  bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
+  bed_file = list.files(system.file('extdata', package = 'peakable'),
                        full.names = TRUE, pattern=seacr_pattern)) %>%
   dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file), seacr_pattern, ''))      
 # 2) get sample information  
@@ -60,7 +60,7 @@ hits_mat <- consolidated_peak_hits(grl)
 
 # 5) PCA: visualize the peaks coorelation bewteen replicates and the difference of peaks of
 # bewteen antibodies, for example:
-pcs <- peaklerrr:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
+pcs <- peakable:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
 ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
   geom_point() +
   theme_minimal()
@@ -74,7 +74,7 @@ library(dplyr)
 library(ggplot2)
 macs2_pattern = '\\.narrowPeak$'
 sample_info <- data.frame(
-  bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
+  bed_file = list.files(system.file('extdata', package = 'peakable'),
                        full.names = TRUE, pattern=macs2_pattern)) %>%
   dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file), 
                                                  macs2_pattern, '')) %>%
@@ -87,7 +87,7 @@ hits_mat <- consolidated_peak_hits(grl)
 
 # 5) PCA: visualize the peaks coorelation bewteen replicates and the difference 
 # across antibodies, for example:
-pcs <- peaklerrr:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
+pcs <- peakable:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
 ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
   geom_point() +
   theme_minimal()

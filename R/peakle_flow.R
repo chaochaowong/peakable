@@ -1,5 +1,6 @@
 #' peakle_flow.R
 #' @example 
+#' /donotrun{
 #' dir_header <- '///Volumes' # via MacBook
 #' result_dir <- file.path(dir_header, 'Active',
 #'                         'lawlor_e/Shireen/CnT_Results',
@@ -9,21 +10,21 @@
 #' peak_bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
 #' peak_bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
 #' seacr <- 
-#'   peaklerrr:::peakle_flow(sample_df, 
+#'   peakable:::peakle_flow(sample_df, 
 #'                           result_dir, result_dir,
 #'                           peak_caller = 'SEACR-thres1p',
 #'                           peak_bed_dir = peak_bed_dir,
 #'                           peak_bed_pattern = peak_bed_pattern)
 #'
-#'  seacr_hit_mat <- peaklerrr::consolidated_peak_hits(seacr$grl)
+#'  seacr_hit_mat <- peakable::consolidated_peak_hits(seacr$grl)
 #' seacr_hit_pca <- 
-#'   peaklerrr:::.getPCA(seacr_hit_mat, 
+#'   peaklable:::.getPCA(seacr_hit_mat, 
 #'                       sample_info=seacr$df, n_pcs=2)
 #' ggplot(seacr_hit_pca, aes(x=PC1, y=PC2, 
 #'                          color=antibody, shape=treatment)) +
 #'   geom_point() + theme_minimal() +
 #'   labs(title='PCA: SEACR peak-hits matrix')
-#'   
+#'}   
 .set_bam_params <- function(result_dir, bam_pattern) {
   #' ignore bam_dir and bam_pattern
   bam_dir <- file.path(result_dir, 'samtools_sort')
@@ -148,11 +149,11 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   # 4) define the peak ranges
 
   if (str_detect(peak_caller, 'SEACR')) 
-    peak_call_func <- peaklerrr::read_seacr
+    peak_call_func <- peakable::read_seacr
   if (str_detect(peak_caller, 'narrow'))
-    peak_call_func <- peaklerrr::read_macs2_narrow
+    peak_call_func <- peakable::read_macs2_narrow
   if (str_detect(peak_caller, 'broad'))
-    peak_call_func <- peaklerrr::read_macs2_broad
+    peak_call_func <- peakable::read_macs2_broad
   
   message('Peak callers: ', peak_caller)
   message('Get peak ranges ...')

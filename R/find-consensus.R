@@ -11,11 +11,11 @@
 #' seacr_file_x <- 
 #'   system.file('extdata',
 #'              'chr2_Rep1_H1_CTCF.stringent.bed',
-#'               package='peaklerrr')
+#'               package='peakable')
 #' seacr_file_y <- 
 #'   system.file('extdata',
 #'              'chr2_Rep2_H1_CTCF.stringent.bed',
-#'                package='peaklerrr')
+#'                package='peakable')
 #'                            
 #' x <- read_seacr(seacr_file_x)
 #' y <- read_seacr(seacr_file_y)
@@ -74,11 +74,11 @@ find_consensus_seacr <- function(x, y, minoverlap = NULL) {
 #' macs2_file_x <- 
 #'   system.file('extdata',
 #'              'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
-#'               package='peaklerrr')
+#'               package='peakable')
 #' macs2_file_y <- 
 #'   system.file('extdata',
 #'              'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
-#'                package='peaklerrr')
+#'                package='peakable')
 #'                            
 #' x <- read_macs2_narrow(seacr_file_x)
 #' y <- read_macs2_narrow(seacr_file_y)

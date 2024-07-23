@@ -1,13 +1,13 @@
-\name{peaklerrr}
-\alias{peaklerrr}
-\title{peaklerrr}
+\name{peakable}
+\alias{peakable}
+\title{peakable}
 
 \description{
-  peaklerrr provides functions facilitating CUT&RUN-seq peak caller QC and downstream analysis
+  peakable provides functions facilitating CUT&RUN-seq peak caller QC and downstream analysis
 }
 
 \details{
-  peaklerrr provides three categories of functions for (1) importing 
+  peakable provides three categories of functions for (1) importing 
   bed files from MACS2 and SEACR peak callers, (2) performing 
   conanical correlation analysis of peaksets, and (3) counting reads on peak ranges. Major functions includes
   \describe{

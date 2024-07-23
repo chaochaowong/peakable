@@ -32,7 +32,7 @@
 # SEACR peak BED file
 seacr_file <- system.file('extdata', 
                           'chr2_Rep1_H1_CTCF.stringent.bed', 
-                          package='peaklerrr')
+                          package='peakable')
 gr <- read_seacr(seacr_file)
 gr
 

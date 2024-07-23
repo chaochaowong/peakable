@@ -52,7 +52,8 @@ library(BiocParallel)
 BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
 
 # local package by CJW
-library(peaklerrr)
+# devtools::install_github('chaochaowong/peakalbe')
+library(peakable)
 ```
 
 ```{r define-paths-and-variables}
@@ -99,7 +100,7 @@ sample_df <-
 
 # MACS2
 
-The code chunk below uses `peaklerrr:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata (extracted from the _Nextflow_ sample sheet). Note `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'. The `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`).
+The code chunk below uses `peakable:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata (extracted from the _Nextflow_ sample sheet). Note `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'. The `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`).
 
 ```{r get-macs2-narrow-peaks}
 # use peakle_flow
@@ -109,7 +110,7 @@ bam_pattern <- '\\.rmDup.filter.sort.bam$'
 # bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 macs2 <- # return: df and grl 
-  peaklerrr:::peakle_flow(sample_df = sample_df, 
+  peakable:::peakle_flow(sample_df = sample_df, 
                           result_dir = result_dir,
                           peak_caller = 'MACS2-narrow',
                           peak_bed_dir = bed_dir, 
@@ -123,7 +124,7 @@ macs2_consensus <- macs2$df %>%
     x <- macs2$grl[[df$sample_id[1]]]
     y <- macs2$grl[[df$sample_id[2]]]
     if (length(x) > 0 & length(y) > 0)
-        peaklerrr::find_consensus_macs2(x, y)
+        peakable::find_consensus_macs2(x, y)
     else GRanges()
   })
 names(macs2_consensus) <- .get_consensus_name(macs2$df)
@@ -143,7 +144,7 @@ macs2_consensus <- readRDS(file.path(data_dir,
 ```{r macs2-hit-mat}
 # tokenize the hits on the corpus features and construct the hit matrix
 macs2_hit_mat <- 
-  peaklerrr::consolidated_peak_hits(macs2$grl)
+  peakable::consolidated_peak_hits(macs2$grl)
 ```
 
 ## Peak numbers
@@ -181,7 +182,7 @@ tmp <- macs2$df %>%
   dplyr::mutate(Ab = factor(Ab))
 
 macs2_hit_pca <- 
-  peaklerrr:::.getPCA(macs2_hit_mat, 
+  peakable:::.getPCA(macs2_hit_mat, 
                       sample_info=tmp, n_pcs=2)
 n_levels <- length(levels(tmp$Ab))
 
@@ -209,8 +210,8 @@ cos_sim <- macs2$df %>%
     
     if (all(x$number_of_peaks > 0)) {
       hit_map <- 
-        peaklerrr::consolidated_peak_hits(macs2$grl[x$sample_id])
-      sim <- peaklerrr:::cos_similarity(x=hit_map[, 1, drop=TRUE],
+        peakable::consolidated_peak_hits(macs2$grl[x$sample_id])
+      sim <- peakable:::cos_similarity(x=hit_map[, 1, drop=TRUE],
                                         y=hit_map[, 2, drop=TRUE])
     }
     
@@ -288,7 +289,7 @@ bam_pattern <- '\\.rmDup.filter.sort.bam$'
 #' use the peakle_flow to return seacr$df (info) and 
 #' seacr$grl (peak ranges)
 seacr <- 
-  peaklerrr:::peakle_flow(sample_df, # must be from nf_sample_sheet
+  peakable:::peakle_flow(sample_df, # must be from nf_sample_sheet
                           result_dir = result_dir,
                           peak_caller = 'SEACR-thres1p',
                           peak_bed_dir = bed_dir, 

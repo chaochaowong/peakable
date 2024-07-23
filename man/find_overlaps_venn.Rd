@@ -30,14 +30,14 @@ library(ggplot2)
 seacr_file_x <- 
   system.file('extdata',
               'chr2_Rep1_H1_CTCF.stringent.bed',
-              package='peaklerrr')
+              package='peakable')
 seacr_file_y <- 
   system.file('extdata',
               'chr2_Rep2_H1_CTCF.stringent.bed',
-              package='peaklerrr')
+              package='peakable')
                             
-x <- peaklerrr::read_seacr(seacr_file_x)
-y <- peaklerrr::read_seacr(seacr_file_y)
+x <- peakable::read_seacr(seacr_file_x)
+y <- peakable::read_seacr(seacr_file_y)
 
 minoverlap <- min(min(width(x)), min(width(y))) / 2
 find_overlaps_venn(x, y, minoverlap = minoverlap)

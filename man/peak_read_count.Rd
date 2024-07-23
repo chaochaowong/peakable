@@ -31,7 +31,7 @@ org.Hs.eg.db\name{peak_read_count}
 # sample info
 bam_pattern <- "\\.bam$""
 bam_df <- data.frame(
-  bed_file = list.files(system.file("extdata"", package = "peaklerrr"),
+  bed_file = list.files(system.file("extdata"", package = "peakable"),
                        full.names = TRUE, pattern="\\.bam$")) \%>\%
   dplyr::mutate(sample_id = 
                 stringr::str_replace(basename(bam_file), 
@@ -39,7 +39,7 @@ bam_df <- data.frame(
                 
 seacr_pattern = "\\.stringent.bed$"                
 bed_df <- peak_df <- data.frame(
-  bed_file = list.files(system.file('extdata', package = 'peaklerrr'),
+  bed_file = list.files(system.file('extdata', package = 'peakable'),
                        full.names = TRUE, pattern=seacr_pattern)) \%>\%
   dplyr::mutate(sample_id = 
                 stringr::str_replace(basename(bed_file), 
@@ -56,8 +56,8 @@ sample_info <- data.frame(
   
 # define feature: 
 
-x <- peaklerrr::read_seacr(sample_info$bed_file[1])
-y <- peaklerrr::read_seacr(sample_info$bed_file[3]) 
+x <- peakable::read_seacr(sample_info$bed_file[1])
+y <- peakable::read_seacr(sample_info$bed_file[3]) 
 features <- GenomicRanges::reduce(x, y)
 
 # count reads for peak ranges              
