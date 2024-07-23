@@ -49,7 +49,7 @@ txDb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 # if using multi-cores
 library(BiocParallel)
-BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
+#BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
 
 # local package by CJW
 # devtools::install_github('chaochaowong/peakalbe')
@@ -70,12 +70,16 @@ fig_dir <- file.path(Rproj_dir, 'figures')
 ```
 
 ```{r nf-sample-sheet-to-rds}
-# import nf sample sheet and save as 'sample_df.rds' in the
+# import nf sample sheet, tidy up and save as 'sample_df.rds' in the
 # data directory
 
+# sample sheet should have 'antibody' column
 sample_df <- read_csv(file.path(result_dir, 'data', 
-                            'nf-sample-sheet.csv')) %>%
-  #tidyr::drop_na(antibody) %>%
+                            'nf-sample-sheet.csv')) 
+
+# tidy up: if the sample sheet has antibody column                            
+sample_df <- sample_df  %>%
+  tidyr::drop_na(antibody) %>%
   dplyr::filter(!antibody == 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
 
@@ -85,9 +89,8 @@ saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
 ```{r load-and-tidy-sample-df}
 #' sample_df is originated from the nextflow sample sheet
 sample_df <- 
-  readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) %>%
-    tidyr::drop_na(antibody) %>%
-    dplyr::select(-single_end, -target_or_control, -read1, -read2)
+  readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) 
+
 ```
 
 ```{r local-tools}
@@ -112,13 +115,17 @@ bed_pattern <- '\\_peaks.narrowPeak$'
 # bam_pattern <- '\\.rmDup.filter.sort.bam$'
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
+# exclude heterochromitan: H3K9me3 or H3K27me3
+narrow_df <- sample_df %>% 
+  dplyr::filter(!antibody %in% c('H3K9me3', 'H3K27me3'))
+
 macs2 <- # return: df and grl 
-  peakable:::peakle_flow(sample_df = sample_df, 
-                          result_dir = result_dir,
-                          peak_caller = 'MACS2-narrow',
-                          peak_bed_dir = bed_dir, 
-                          peak_bed_pattern = bed_pattern,
-                          bam_pattern = bam_pattern) 
+  peakable:::peakle_flow(sample_df = narrow_df, 
+                         result_dir = result_dir,
+                         peak_caller = 'MACS2-narrow',
+                         peak_bed_dir = bed_dir, 
+                         peak_bed_pattern = bed_pattern,
+                         bam_pattern = bam_pattern) 
 
 # consensus
 macs2_consensus <- list()
@@ -135,6 +142,7 @@ names(macs2_consensus) <- .get_consensus_name(macs2$df)
 macs2_consensus$df <- 
   data.frame(sample_id = names(macs2_narrow_consensus$grl),
              number_of_peaks = sapply(macs2_narrow_consensus$grl, length))
+# hints: better add cell_line and antibody to macs2_consensus$df
 
 saveRDS(macs2, file=file.path(data_dir, "macs2.rds"))
 saveRDS(macs2_consensus, 
@@ -228,7 +236,6 @@ cos_sim <- macs2$df %>%
                cos_sim = sim)
   })
 ```
-
 
 ```{r viz-macs-cos-sim}
 cos_sim %>%
