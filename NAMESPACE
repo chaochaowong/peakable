@@ -6,6 +6,7 @@ importFrom(rtracklayer, import, export)
 importFrom(ggVennDiagram, ggVennDiagram)
 importFrom(purrr, map_df, map_dfc)
 importFrom(tibble, add_column)
+importFrom(stringr, str_detect)
 
 import(GenomicRanges, plyranges)
 import(dplyr)
