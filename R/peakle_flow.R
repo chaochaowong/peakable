@@ -76,7 +76,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         peak_bed_dir,
                         peak_bed_pattern,
                         bam_pattern = NULL) {
-  library(tidyverse)
+  require(dplyr)
+  require(stringr)
   require(purrr)
   require(BiocParallel)
 
@@ -120,12 +121,19 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
       dplyr::left_join(stats_df, by='sample_id')
   }
 
+
   # 3) get peak bed files
-  peak_df <- data.frame(
-    bed_file = list.files(peak_bed_dir, pattern=peak_bed_pattern,
-                          full.name=TRUE)) %>%
+  bed_files <- list.files(peak_bed_dir, pattern=peak_bed_pattern,
+                          full.name=TRUE)
+  if (identical(bed_files, character(0))) {
+    msg <- sprintf('Cannot find matting bed pattern %s in %s',
+                   peak_bed_pattern, peak_bed_dir)
+    stop(msg)
+  }
+
+  peak_df <- data.frame(bed_file = bed_files) %>%
     dplyr::mutate(peakcall_id = str_replace(basename(bed_file),
-                                          peak_bed_pattern, ''),
+                                            peak_bed_pattern, ''),
                   peak_caller = peak_caller) %>%
     # if relaxed or stringent compared with IgG, then tidy sample_id
     dplyr::mutate(sample_id =  str_split(peakcall_id, '_vs_',
