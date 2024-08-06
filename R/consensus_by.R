@@ -1,6 +1,7 @@
 #' @importFrom stringr str_detect
 #'
-consensus_by <- function(sample_df, peaks_grl,
+consensus_by <- function(sample_df,
+                         peaks_grl,
                          consensus_group_by,
                          peak_caller = c('macs2', 'searc')
                         ) {
@@ -19,7 +20,7 @@ consensus_by <- function(sample_df, peaks_grl,
     peak_caller <- tolower(peak_caller[1])
 
     if (!str_detect(peak_caller, 'seacr|macs2'))
-      peak_call <- NULL
+      peak_caller <- NULL
   }
 
   # define overlap functions
@@ -42,19 +43,30 @@ consensus_by <- function(sample_df, peaks_grl,
   return(consensus)
 }
 
-.construct_consensus_grl <- function(peaks_grl, sample_df,
+.construct_consensus_grl <- function(peaks_grl,
+                                     sample_df,
                                      consensus_group_by,
                                      overlap_call_func) {
   # can only handle two replicates
   grl <- sample_df %>%
     dplyr::group_split(across(all_of(consensus_group_by))) %>%
     map(function(df) {
-      if (nrow(df) == 1) { peaks_grl[[df$sample_id[1]]] }
+      if (nrow(df) == 1) {
+        print(df$sample_id)
+        print(length(peaks_grl[[df$sample_id]]))
+        gr <- peaks_grl[[df$sample_id]]
+      }
       if (nrow(df) > 1) {
         x <- peaks_grl[[df$sample_id[1]]]
         y <- peaks_grl[[df$sample_id[2]]]
-        overlap_call_func(x, y)
+        if (length(x) > 0 & length(y) > 0) {
+          gr <- overlap_call_func(x, y)
+          }
+        else {
+          gr <- GRanges()
+          }
       }
+      return(gr)
    })
 
   keys <- sample_df %>%
