@@ -52,19 +52,17 @@ consensus_by <- function(sample_df,
     dplyr::group_split(across(all_of(consensus_group_by))) %>%
     map(function(df) {
       if (nrow(df) == 1) {
-        print(df$sample_id)
-        print(length(peaks_grl[[df$sample_id]]))
         gr <- peaks_grl[[df$sample_id]]
       }
+
       if (nrow(df) > 1) {
         x <- peaks_grl[[df$sample_id[1]]]
         y <- peaks_grl[[df$sample_id[2]]]
         if (length(x) > 0 & length(y) > 0) {
           gr <- overlap_call_func(x, y)
-          }
-        else {
+        } else {
           gr <- GRanges()
-          }
+        }
       }
       return(gr)
    })
@@ -82,7 +80,7 @@ consensus_by <- function(sample_df,
   grl <- setNames(grl, list_df$sample_id)
 
   grl_df <- data.frame(sample_id = names(grl),
-                   number_of_peaks = sapply(grl, length)) %>%
+                       number_of_peaks = sapply(grl, length)) %>%
     dplyr::left_join(list_df, by='sample_id')
 
   return(list(grl=grl, df=grl_df))

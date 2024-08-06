@@ -152,15 +152,9 @@ macs2_rep_consensus <- # use peakable:::consensus_by()
 
 ```{r load-peak-rds}
 # load peaks 
-macs2 <- readRDS(file.path(data_dir, "macs2.rds"))
-macs2_consensus <- readRDS(file.path(data_dir, 
-                                     'macs2_consensus.rds'))
-```
-
-```{r macs2-hit-mat}
-# tokenize the hits on the corpus features and construct the hit matrix
-macs2_hit_mat <- 
-  peakable::consolidated_peak_hits(macs2$grl)
+# macs2 <- readRDS(file.path(data_dir, "macs2.rds"))
+# macs2_rep_consensus <- readRDS(file.path(data_dir, 
+#                                     'macs2_rep_consensus.rds'))
 ```
 
 ## Peak numbers
@@ -170,7 +164,7 @@ macs2$df %>%
   dplyr::arrange(antibody, cell_line) %>%
   dplyr::mutate(sample_id = factor(sample_id, levels=sample_id)) %>%
   ggplot(aes(y=sample_id, x=number_of_peaks, 
-             color=antiboy, fill=antibody)) +
+             color=antibody, fill=antibody)) +
     geom_bar(width=0.8, alpha = 0.8, stat="identity") +
     geom_text(aes(label=number_of_peaks), 
               vjust=0.5, hjust=1, color="white", size=3) +
@@ -178,7 +172,7 @@ macs2$df %>%
     theme(#panel.grid.minor = element_blank(),
           panel.grid.major = element_blank(),
           legend.position = 'top')  +
-  labs(title='MACS2 narrow peak numbers') +
+  labs(title='MACS2 narrow and broad peak numbers') +
   scale_x_continuous(trans='log2') +
   theme(legend.position = 'none')
 ```
@@ -187,6 +181,12 @@ macs2$df %>%
 
 - Construct a n-by-m hit matrix of peaks against a collection of peakets, with entry 1 if a sample's peak hit the consolidated peaks and 0 otherwise. $n$ is the number of consolidated peaks and $m$ is the number of the samples
 - Perform PCA on the hit matrix to obtain an overview of the peaks overlap/non-overlap variation across groups, histone marks, or treatments
+
+```{r macs2-hit-mat}
+# tokenize the hits on the corpus features and construct the hit matrix
+macs2_hit_mat <- 
+  peakable::consolidated_peak_hits(macs2$grl)
+```
 
 ```{r macs2-pca-peak-hits}
 # viz consolidated peak hits by PCA
@@ -203,10 +203,10 @@ macs2_hit_pca <-
 n_levels <- length(levels(tmp$antibody))
 
 ggplot(macs2_hit_pca, aes(x=PC1, y=PC2, 
-                          color=anbibody, shape=antibody)) +
+                          color=antibody, shape=antibody)) +
   geom_point() +
   theme_light() +
-  facet_wrap(~cell_line, nrow=2, scales='free') +
+  facet_wrap(~cell_line, nrow=2) +
   scale_shape_manual(values=1:n_levels) +
   labs(title='PCA: MACS2 peak-hit')
 ```
@@ -218,17 +218,20 @@ The code chuck below assumes the samples only have duplicates. You will have to 
 ```{r macs-cos-sim}
 #' (1) build hit mat between duplicates
 #' (2) cos similarity
+
 cos_sim <- macs2$df %>%
   group_split(antibody, cell_line) %>%
   map_dfr(function(x) {
-    if (any(x$number_of_peaks == 0))
-      sim <- 0
+    if (nrow(x) == 1) 
+      sim <- NA
     
-    if (all(x$number_of_peaks > 0)) {
+    if (nrow(x) > 1 & all(x$number_of_peaks > 0)) {
       hit_map <- 
         peakable::consolidated_peak_hits(macs2$grl[x$sample_id])
       sim <- peakable:::cos_similarity(x=hit_map[, 1, drop=TRUE],
-                                        y=hit_map[, 2, drop=TRUE])
+                                       y=hit_map[, 2, drop=TRUE])
+    } else {
+      sim <- 0
     }
     
     data.frame(antibody = x$antibody[1],
@@ -250,23 +253,17 @@ cos_sim %>%
 ```
 
 ## Consensus peaks
-Display consensus peak numbers
+
 
 ```{r macs2-consensus-peak-number}
-df <- data.frame(sample_id = names(macs2_consensus),
-                 number_of_consensus_peaks= 
-                   sapply(macs2_consensus, length)) %>%
-  dplyr::mutate(Ab = 
-                  str_split(sample_id, "-", simplify=TRUE)[, 1],
-                cell_line = 
-                  str_split_fixed(sample_id, "-", n=2)[, 2]) %>%
-  dplyr::arrange(Ab, cell_line) %>%
-  dplyr::mutate(sample_id = factor(sample_id, levels=sample_id))
-
-ggplot(df, aes(x=number_of_consensus_peaks, y=sample_id,
-               color=Ab, fill=Ab)) +
+# display macs2_rep_consensus
+macs2_rep_consensus$df %>%
+  dplyr::arrange(antibody, cell_line) %>%
+  dplyr::mutate(sample_id = factor(sample_id, levels=sample_id)) %>%
+ggplot(aes(x=number_of_peaks, y=sample_id,
+       color=antibody, fill=antibody)) +
   geom_bar(width=0.8, alpha = 0.8, stat="identity") +
-  geom_text(aes(label=number_of_consensus_peaks), 
+  geom_text(aes(label=number_of_peaks), 
             vjust=0.5, hjust=1, color="white", size=3) +
   theme_minimal() +
   theme(panel.grid.major = element_blank()) +
@@ -279,37 +276,40 @@ ggplot(df, aes(x=number_of_consensus_peaks, y=sample_id,
 - Use `ChIPseeker` to annotate the consensus peaks
 - Plot feature distribution
 
-```{r macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs'}
-# how many known genes
-# how many unique genes' TSS it binds to?
-macs2_annolst_M07e <- bplapply(macs2_consensus,
-                     ChIPseeker::annotatePeak,
-                     tssRegion=c(-3000, 3000),
-                     TxDb=txDb, annoDb="org.Hs.eg.db")
+```{r macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs', fig.width=6}
+# make sure the GRanges is not empty before using # ChIPseeker::anotatePeak()
+keep <- macs2_rep_consensus$df %>%
+  dplyr::filter(number_of_peaks > 0) %>% pull(sample_id)
 
-plotAnnoBar(macs2_annolst_M07e)
+macs2_annolst <- bplapply(macs2_rep_consensus$grl[keep],
+                          ChIPseeker::annotatePeak,
+                          tssRegion=c(-3000, 3000),
+                          TxDb=txDb, annoDb="org.Hs.eg.db")
+
+plotAnnoBar(macs2_annolst)
 ```
 
 
-# SEACR
+# SEACR QC
+
+I have chosen not to use SEACR.
 
 Code chunks in this section would be mostly similar to the previous one.
 ```{r use-peak-flow-get-seacr-peaks}
 # get import SEACR bed files 
 bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
 bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
-# bam_pattern <- '\\.markedDup.filter.sort.bam$'
-bam_pattern <- '\\.rmDup.filter.sort.bam$'
+bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 #' use the peakle_flow to return seacr$df (info) and 
 #' seacr$grl (peak ranges)
 seacr <- 
   peakable:::peakle_flow(sample_df, # must be from nf_sample_sheet
-                          result_dir = result_dir,
-                          peak_caller = 'SEACR-thres1p',
-                          peak_bed_dir = bed_dir, 
-                          peak_bed_pattern = bed_pattern,
-                          bam_pattern = bam_pattern) 
+                         result_dir = result_dir,
+                         peak_caller = 'SEACR-thres1p',
+                         peak_bed_dir = bed_dir, 
+                         peak_bed_pattern = bed_pattern,
+                         bam_pattern = bam_pattern) 
 # pick one per sample_id
 saveRDS(seacr, file.path(data_dir, 'seacr_thres1p.rds'))
 ```
