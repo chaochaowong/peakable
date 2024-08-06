@@ -96,6 +96,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   samtools_params <- .set_samtools_params(result_dir)
   stats_dir <- samtools_params$stats_dir
   stats_pattern <- samtools_params$stats_pattern
+  peak_caller <- tolower(peak_caller)
 
   # check the input sample_df is valid
   # check if stats_dir exists, if not, skip samtools stats
@@ -158,11 +159,11 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     stop('Cannot not fine the peak bed files for these samples.')
   # 4) define the peak ranges
 
-  if (str_detect(peak_caller, 'SEACR'))
+  if (str_detect(peak_caller, 'seacr'))
     peak_call_func <- peakable::read_seacr
   if (str_detect(peak_caller, 'narrow'))
     peak_call_func <- peakable::read_macs2_narrow
-  if (str_detect(peak_caller, 'broad'))
+  if (str_detect(peak_caller) 'broad'))
     peak_call_func <- peakable::read_macs2_broad
 
   message('Peak callers: ', peak_caller)
@@ -178,4 +179,14 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   peak_df$number_of_peaks <- sapply(peak_grl, length)
 
   return(list(df = peak_df, grl = peak_grl))
+}
+
+
+.macs2_bind <- function(macs2_narrow, macs2_broad) {
+  # combine macs2_narrow and macs2_broad
+  # macs2_narrow and macs2_broad must be the return of peakle_flow
+  macs2 <- vector('list', 2)
+  macs2$df <- c(macs2_narrow$df, macs2_broad$df)
+  macs2$grl <- c(macs2_narrow$grl, macs2_broad$grl)
+  return(macs2)
 }
