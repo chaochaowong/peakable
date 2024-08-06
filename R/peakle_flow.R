@@ -75,7 +75,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         peak_caller,
                         peak_bed_dir,
                         peak_bed_pattern,
-                        bam_pattern = NULL) {
+                        bam_pattern = NULL,
+                        species = "Homo_sapiens") {
   require(dplyr)
   require(stringr)
   require(purrr)
@@ -91,9 +92,11 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
 
   # define parameters and patterns
   bam_params <- .set_bam_params(result_dir, bam_pattern)
+  samtools_params <- .set_samtools_params(result_dir)
+
+  # assign parameters
   bam_dir <- bam_params$bam_dir
   bam_pattern <- bam_params$bam_pattern
-  samtools_params <- .set_samtools_params(result_dir)
   stats_dir <- samtools_params$stats_dir
   stats_pattern <- samtools_params$stats_pattern
   peak_caller <- tolower(peak_caller[1])
@@ -104,6 +107,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   # 1.a) bam files; sample_id is the basename with bam_patter replaced
   bam_df <- .get_list_files_and_sample_id(bam_dir, bam_pattern) %>%
     dplyr::rename(bam_file = 'file')
+  if (nrow(bam_df))
+    stop('BAM file pattern does not exist: ', bam_pattern)
 
   # check if stats_dir exists
   if (file.exists(stats_dir) ) {
@@ -141,6 +146,9 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                                          simplify=TRUE)[, 1]) %>%
     dplyr::right_join(sample_df, by='sample_id') %>%
     dplyr::filter(!is.na(bed_file)) # some IgG files do not have bed files
+
+  if (nrow(peak_df))
+    stop('BAM files do not match the samples in the peak bed files')
 
   # additional column for the IgG file: if caller is SEACR
   if (str_detect(peak_caller, 'SEACR')) { # not detect threshold

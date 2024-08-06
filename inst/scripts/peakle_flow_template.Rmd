@@ -61,8 +61,7 @@ dir_header <- '///Volumes' # via MacBook
 result_dir <- 
   file.path(dir_header, 'Active',
             'sarthy_j/Sarthy/Sarthy_Lab/CUTRUN_Records',
-            'GBe4_M07e_palbo-50nM_FHD286-100nM_combo_CnT_04052024') 
-
+            'CZe1_CnT_K562_WT_KO_05202024')
 Rproj_dir <- file.path(result_dir, 'R_proj')
 data_dir <- file.path(Rproj_dir, 'data')
 fig_dir <- file.path(Rproj_dir, 'figures')
@@ -79,6 +78,7 @@ sample_df <- read_csv(file.path(result_dir, 'data',
 
 # tidy up and customize  'sample_df'
 sample_df <- sample_df  %>%
+  dplyr::rename(antibody = 'Ab') %>%
   tidyr::drop_na(antibody) %>%
   dplyr::filter(!antibody == 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
@@ -119,9 +119,10 @@ macs2_narrow <- # return: df and grl
                          peak_bed_pattern = bed_pattern,
                          bam_pattern = bam_pattern) 
 
-# broad peaks: K9me3 and(or) K27me3
+# if there are broad peaks: K9me3 and(or) K27me3
 df_broad <- sample_df %>% 
-  dplyr::filter(antibody %in% c('H3K9me3', 'H3K27me3'))
+  dplyr::filter(antibody %in% c('K9me3', 'K27me3'))
+bed_pattern  <- '\\_peaks.broadPeak$'
 
 macs2_broad <- # return: df and grl 
   peakable:::peakle_flow(sample_df = df_broad, 
@@ -133,7 +134,8 @@ macs2_broad <- # return: df and grl
 
 # combine narrow and broad peaks
 macs2 <- peakable:::.macs2_bind(macs2_narrow, macs2_broad)
-saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
+
+#saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
 ```
 
 ```{r macs-replicate-consensus}
