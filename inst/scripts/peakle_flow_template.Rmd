@@ -59,14 +59,16 @@ library(peakable)
 # define directories
 dir_header <- '///Volumes' # via MacBook
 result_dir <- 
-  file.path(dir_header) # add your mount to the result directory
+  file.path(dir_header, 'Active',
+            'sarthy_j/Sarthy/Sarthy_Lab/CUTRUN_Records',
+            'GBe4_M07e_palbo-50nM_FHD286-100nM_combo_CnT_04052024') 
 
 Rproj_dir <- file.path(result_dir, 'R_proj')
 data_dir <- file.path(Rproj_dir, 'data')
 fig_dir <- file.path(Rproj_dir, 'figures')
 ```
 
-```{r nf-sample-sheet-to-rds, eval=FALSE}
+```{r nf-sample-sheet-to-rds}
 # - import nexflow sample sheet
 # - tidy up and save as 'sample_df.rds' in the data directory
 # - expect to have 'antibody' and 'cell_line' columns
@@ -89,16 +91,6 @@ sample_df <-
   readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) 
 ```
 
-```{r local-tools}
-# 1. get consensus name if the consensus if performed
-.get_consensus_name <- function(df) {
-  df %>%
-    group_by(antibody, cell_line) %>%
-    summarize(antibody=unique(antibody), cell_line= unique(cell_line)) %>%
-    dplyr::mutate(consensus = paste0(antibody, "-", cell_line)) %>%
-    pull(consensus)
-}
-```
 
 # MACS2
 
@@ -106,13 +98,13 @@ The code chunk below uses `peakable:::peakle_flow()` to import peak ranges (`grl
 
 - `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'     
 - `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`)      
-- The path to `bam` files is set to `result_dir/samtools_sort` (I might in the futhure allow user to define the bam file path)
+- The path to `bam` files is set to `result_dir/samtools_sort` (I might in the future allow user to define the `bam_dir`)
 
 ```{r get-macs2-peaks}
 # use peakle_flow
 bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
 bed_pattern <- '\\_peaks.narrowPeak$'
-# bam_pattern <- '\\.rmDup.filter.sort.bam$'
+#bam_dir <- file.path(result_dir, 'samtools_sort')
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 # exclude heterochromitan: H3K9me3 or H3K27me3
@@ -144,27 +136,15 @@ macs2 <- peakable:::.macs2_bind(macs2_narrow, macs2_broad)
 saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
 ```
 
-```{r macs-consensus}
-# consensus
-macs2_consensus <- list()
-macs2_consensus$grl <- macs2$df %>%
-  group_split(antibody, cell_line) %>%
-  map(function(df) {
-    x <- macs2$grl[[df$sample_id[1]]]
-    y <- macs2$grl[[df$sample_id[2]]]
-    if (length(x) > 0 & length(y) > 0)
-        peakable::find_consensus_macs2(x, y)
-    else GRanges()
-  })
-names(macs2_consensus) <- .get_consensus_name(macs2$df)
-macs2_consensus$df <- 
-  data.frame(sample_id = names(macs2_narrow_consensus$grl),
-             number_of_peaks = sapply(macs2_narrow_consensus$grl, length))
-# hints: better add cell_line and antibody to macs2_consensus$df
-
-saveRDS(macs2, file=file.path(data_dir, "macs2.rds"))
-saveRDS(macs2_consensus, 
-        file=file.path(data_dir, 'macs2_consensus.rds'))
+```{r macs-replicate-consensus}
+# replicates consensus
+macs2_rep_consensus <- # use peakable:::consensus_by()
+  consensus_by(sample_df = macs2$df,
+               peaks_grl = macs2$grl,
+               consensus_group_by = c('treatment', 'Ab'),
+               peak_caller = 'macs2')
+saveRDS(macs2_rep_conensus, 
+        file=file.path(data_dir, 'macs2_rep_consensus.rds'))
 ```
 
 ```{r load-peak-rds}
