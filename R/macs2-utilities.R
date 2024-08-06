@@ -45,6 +45,7 @@ read_macs2_narrow <- function(file, drop_chrM = FALSE,
   return(gr)
 }
 
+#' read_macs2_broad
 #' Import MACS2 broadPeak and broadPeak BED file and format
 #' ranges to a object
 #' @file: a path to a file or a connection
@@ -74,6 +75,7 @@ read_macs2_broad <- function(file, drop_chrM = FALSE,
   extraCols_broadPeak <- c(signalValue = "numeric",
                            pValue = "numeric",
                            qValue = "numeric")
+  # check if the bed file has signalValue, pValue, qValue and not peak
 
   # what's the species? must assign species or genome
   gr <- rtracklayer::import(file, format = 'BED',

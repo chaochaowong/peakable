@@ -103,33 +103,33 @@ The code chunk below uses `peakable:::peakle_flow()` to import peak ranges (`grl
 ```{r get-macs2-peaks}
 # use peakle_flow
 bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
-bed_pattern <- '\\_peaks.narrowPeak$'
+bed_narrow_pattern <- '\\_peaks.narrowPeak$'
+bed_broad_pattern  <- '\\_peaks.broadPeak$'
 #bam_dir <- file.path(result_dir, 'samtools_sort')
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 # exclude heterochromitan: H3K9me3 or H3K27me3
 df_narrow <- sample_df %>% 
   dplyr::filter(!antibody %in% c('H3K9me3', 'H3K27me3'))
+df_broad <- sample_df %>% 
+  dplyr::filter(antibody %in% c('K9me3', 'K27me3'))
 
+# narrow: df_narrow, bed_narrow_pattern 
 macs2_narrow <- # return: df and grl 
   peakable:::peakle_flow(sample_df = df_narrow, 
                          result_dir = result_dir,
                          peak_caller = 'MACS2-narrow',
                          peak_bed_dir = bed_dir, 
-                         peak_bed_pattern = bed_pattern,
+                         peak_bed_pattern = bed_narrow_pattern,
                          bam_pattern = bam_pattern) 
 
-# if there are broad peaks: K9me3 and(or) K27me3
-df_broad <- sample_df %>% 
-  dplyr::filter(antibody %in% c('K9me3', 'K27me3'))
-bed_pattern  <- '\\_peaks.broadPeak$'
-
+#bed_pattern  <- '\\_peaks.broadPeak$'
 macs2_broad <- # return: df and grl 
   peakable:::peakle_flow(sample_df = df_broad, 
                          result_dir = result_dir,
                          peak_caller = 'MACS2-broad',
                          peak_bed_dir = bed_dir, 
-                         peak_bed_pattern = bed_pattern,
+                         peak_bed_pattern = bed_broad_pattern,
                          bam_pattern = bam_pattern) 
 
 # combine narrow and broad peaks

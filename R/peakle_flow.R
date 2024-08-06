@@ -107,22 +107,28 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   # 1.a) bam files; sample_id is the basename with bam_patter replaced
   bam_df <- .get_list_files_and_sample_id(bam_dir, bam_pattern) %>%
     dplyr::rename(bam_file = 'file')
-  if (nrow(bam_df))
+
+  if (nrow(bam_df) == 0)
     stop('BAM file pattern does not exist: ', bam_pattern)
+  # append bam_df to sample_df by 'sample_id'
+
+  sample_df <- sample_df %>%
+    dplyr::inner_join(bam_df, by='sample_id')
+
+  if (nrow(sample_df) == 0)
+    stop('The sample_id extracted from BAM files does not match sample_df$sample_id.')
 
   # check if stats_dir exists
   if (file.exists(stats_dir) ) {
-     stats_df <- .samtools_stats(stats_dir, stats_pattern)
+    message('Sorting samtools stats ...')
+    stats_df <- .samtools_stats(stats_dir, stats_pattern)
   } else {
     stats_df <- NULL
   }
 
 
-  # 2) append to sample_df; remove irrelavent columns
-  sample_df <- sample_df %>%
-    dplyr::left_join(bam_df, by='sample_id')
-
-  if (!is.null(stats_df)) {
+  # 2) append to stats_df to sample_df
+    if (!is.null(stats_df)) {
     sample_df <- sample_df %>%
       dplyr::left_join(stats_df, by='sample_id')
   }
@@ -137,6 +143,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     stop(msg)
   }
 
+  # append all bed_files to sample_df and other information
   peak_df <- data.frame(bed_file = bed_files) %>%
     dplyr::mutate(peakcall_id = str_replace(basename(bed_file),
                                             peak_bed_pattern, ''),
@@ -144,14 +151,14 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     # if relaxed or stringent compared with IgG, then tidy sample_id
     dplyr::mutate(sample_id =  str_split(peakcall_id, '_vs_',
                                          simplify=TRUE)[, 1]) %>%
-    dplyr::right_join(sample_df, by='sample_id') %>%
+    dplyr::inner_join(sample_df, by='sample_id') %>%
     dplyr::filter(!is.na(bed_file)) # some IgG files do not have bed files
 
-  if (nrow(peak_df))
-    stop('BAM files do not match the samples in the peak bed files')
+  if (nrow(peak_df) < 1)
+    stop('Cannot not match the peak bed files and bam files for these samples.')
 
   # additional column for the IgG file: if caller is SEACR
-  if (str_detect(peak_caller, 'SEACR')) { # not detect threshold
+  if (str_detect(peak_caller, 'seacr')) { # not detect threshold
     if (str_detect(peak_caller, 'relaxed|stringent')) {
        peak_df <- peak_df %>%
         dplyr::mutate(IgG = str_split(peakcall_id, '_vs_',
@@ -162,9 +169,6 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   # tidyup and remove peakcall_id
   peak_df <- peak_df %>% dplyr::select(-peakcall_id)
 
-  # 4) sanity check
-  if (nrow(peak_df) < 1)
-    stop('Cannot not fine the peak bed files for these samples.')
   # 4) define the peak ranges
 
   if (str_detect(peak_caller, 'seacr'))
@@ -178,7 +182,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   message('Get peak ranges ...')
 
   peak_grl <- bplapply(peak_df$bed_file,
-                       peak_call_func,
+                       peak_call_func, # miss match peak type and func
                        drop_chrM = TRUE,
                        keep_standard_chrom = TRUE,
                        species = 'Homo_sapiens')
@@ -194,7 +198,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   # combine macs2_narrow and macs2_broad
   # macs2_narrow and macs2_broad must be the return of peakle_flow
   macs2 <- vector('list', 2)
-  macs2$df <- c(macs2_narrow$df, macs2_broad$df)
+  macs2$df <- dplyr::bind_rows(macs2_narrow$df, macs2_broad$df)
   macs2$grl <- c(macs2_narrow$grl, macs2_broad$grl)
   return(macs2)
 }
