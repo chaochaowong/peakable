@@ -96,7 +96,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   samtools_params <- .set_samtools_params(result_dir)
   stats_dir <- samtools_params$stats_dir
   stats_pattern <- samtools_params$stats_pattern
-  peak_caller <- tolower(peak_caller)
+  peak_caller <- tolower(peak_caller[1])
 
   # check the input sample_df is valid
   # check if stats_dir exists, if not, skip samtools stats
@@ -163,7 +163,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     peak_call_func <- peakable::read_seacr
   if (str_detect(peak_caller, 'narrow'))
     peak_call_func <- peakable::read_macs2_narrow
-  if (str_detect(peak_caller) 'broad'))
+  if (str_detect(peak_caller, 'broad'))
     peak_call_func <- peakable::read_macs2_broad
 
   message('Peak callers: ', peak_caller)
