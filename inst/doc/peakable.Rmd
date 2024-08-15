@@ -1,0 +1,237 @@
+---
+title: "Getting started with the peakable package"
+author: "Chao-Jen Wong"
+package: peakable
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.align = 'left')
+```
+
+# Getting started
+The `peakable` package provides convenient methods for facilitating CUT&RUN and CUT&Tag-seq peaksets quality control and downstream analysis. The functionality breaks down into three parts:     
+
+1. Peak import/export
+2. QC tools including PCA and cosine similarity based on peak hits
+3. Finding consensus between replicates
+  
+
+```{r load-lib}
+library(rtracklayer)
+library(plyranges)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(ggplot2)
+
+# if peakable not instal yet: 
+# devtools::install_git('chaochaowong/peakable')
+library(peakable)
+```
+
+# Data import/export
+
+## MACS2 narrow and broad peaks
+We provide a wrapper to `rtracklayers::import.bed()` to accommodate the importing of MACS2 narrow and broad peak file in BED6+4 format. The imported intervals are formatted as `GRanges`.
+
+```{r read_macs2_narrow}
+# wrapper function of rtracklayer::import.bed()
+narrow_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
+              package='peakable')
+gr <- read_macs2_narrow(narrow_file,
+                        drop_chrM = TRUE,
+                        keep_standard_chrom = TRUE,
+                        species = 'Homo_sapiens')
+gr 
+```
+
+Alternatively, `plyranges::read_narrowPeaks()` is also a wrapper function to import MACS2 _narrowPeaks_.
+
+The `extract_summit_macs2` function extract the summit from the peack ranges.
+```{r extract-macs2-summit}
+# extract summit for MACS2 narrowPeaks
+summit_macs2 <- extract_summit_macs2(gr)
+summit_macs2
+```
+
+
+```{r read_macs2_broad}
+broad_file <- system.file('extdata', 
+                          'chr2_Rep1_H1_H3K27me3_peaks.broadPeak',
+                           package='peakable')
+gr <- read_macs2_broad(broad_file,
+                       drop_chrM = TRUE,
+                       keep_standard_chrom = TRUE,
+                       species = 'Homo_sapiens')
+gr
+```
+
+`plyranges::write_narrowPeaks()`
+`write_boradPeaks()`
+
+## SEARC
+```{r read_seacr}
+seacr_file <- system.file('extdata',
+                          'chr2_Rep1_H1_CTCF.stringent.bed',
+                          package='peakable')
+gr <- read_seacr(seacr_file,
+                 drop_chrM = TRUE,
+                 keep_standard_chrom = TRUE,
+                 species = 'Homo_sapiens')
+gr
+```
+```{r extract-summit-seacr}
+summit_seacr <- extract_summit_seacr(gr)
+summit_seacr
+```
+
+`write_seacr`
+
+
+# Peakset QC
+Peak hits matrix and PCA
+
+## Construction of peak hits matrix
+```{r peak-hit-excalidraw, echo=FALSE, out.width='120%', fig.cap='Peak hits mat'}
+img <- system.file('images', 'peak-hits.png',
+                    package='peakable')
+knitr::include_graphics(img)
+```
+The code chunk below makes a sample information data.frame:
+```{r sample-info}
+# construct a data.frame from sample information
+narrow_pattern = '\\_peaks.narrowPeak$'
+sample_info <- data.frame(
+  bed_file = list.files(
+    system.file('extdata', package = 'peakable'),
+    full.names = TRUE, pattern=narrow_pattern)) %>%
+  dplyr::mutate(sample_id = 
+                  stringr::str_replace(basename(bed_file),
+                                       narrow_pattern, ''))   %>%
+  dplyr::mutate(antibody = 
+                  stringr::str_split(sample_id, '_', 
+                                     simplify=TRUE)[, 4]) %>%
+  dplyr::relocate(sample_id, antibody, .before='bed_file')
+
+sample_info %>%
+  kable(caption='sample information') %>%
+  kableExtra::kable_styling('striped')
+```
+
+Import the peak files as a list of `GRanges`:
+```{r import-bed-files}
+# import bed files
+grl <- lapply(sample_info$bed_file, read_macs2_narrow, 
+              drop_chrM = TRUE,
+              keep_standard_chrom = TRUE,
+              species = 'Homo_sapiens')
+names(grl) <- sample_info$sample_id
+```
+
+## PCA
+Consolidate the peaks to make the peak hits (`consolidate_peak_hits`)
+
+```{r create-hit-matrix-pca}
+hits_mat <- peakable::consolidated_peak_hits(grl)
+pcs <- peaklerrr:::.getPCA(hits_mat, sample_info, n_pcs=2)
+ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
+  geom_point() + theme_minimal()
+```
+
+## Cosine similarity
+hits-based cosine similarity between replicates:
+```{r cos-sim, fig.height=2, fig.width = 6, fig.cap='cos similarity of peak hits between replicates'}
+# CTCF replicates
+hits_mat <- peakable::consolidated_peak_hits(grl[c(1, 3)])
+ctcf_cos_sim <- peakable:::cos_similarity(hits_mat[, 1, drop=TRUE],
+                                         hits_mat[, 2, drop=TRUE])
+# H3K4me3 replicates
+hits_mat <- peakable::consolidated_peak_hits(grl[c(2, 4)])
+k4me3_cos_sim <- peakable:::cos_similarity(hits_mat[, 1, drop=TRUE],
+                                         hits_mat[, 2, drop=TRUE])
+data.frame(antibody = c('CTCF', 'H3K4me3'),
+           cos_sim = c(ctcf_cos_sim, k4me3_cos_sim)) %>%
+  ggplot(aes(x=cos_sim, y=antibody)) +
+    geom_point() +
+    geom_segment(aes(x=0, y=antibody, xend=cos_sim, 
+                     yend=antibody), color='grey50') +
+    theme_light() +
+    labs(title='MACS2 narrow peakets: cos similarity')
+```
+# Finding consensus
+
+## consensus for MACS2
+`find_consensus_macs2()`
+```{r find-consensus-macs2}
+macs2_file_x <- 
+  system.file('extdata',
+              'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
+               package='peakable')
+macs2_file_y <- 
+  system.file('extdata',
+              'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
+                package='peakable')
+                            
+x <- peakable::read_macs2_narrow(macs2_file_x)
+y <- peakable::read_macs2_narrow(macs2_file_y)
+consensus <- find_consensus_macs2(x, y, minoverlap = 40L)
+consensus
+```
+
+Venn diagram of overlaps
+```{r find-overlaps-venn}
+find_overlaps_venn(x, y, 
+                   label_x = 'chr2_Rep1_H1_CTCF',
+                   label_y = 'chr2_Rep2_H1_CTCF',
+                   minoverlap = 40L)
+```
+
+## `consensus_by`
+
+`consensus_by`: take advantage of `sample_info` and robustly get the consensus between replicates
+```{r consensus-by}
+# consensus_by() group the grl by 'antibody' and returns a data.frame and a list of
+# two consensus ranges in GRanges instances
+consensus <- peakable:::consensus_by(sample_info, 
+             peaks_grl = grl,
+             consensus_group_by = 'antibody',
+             peak_caller = 'macs2')
+consensus$df
+head(consensus$grl[['CTCF']])
+```
+## Consensus for SEACR
+`find_consensus_seacr()`
+```{r find-consensus-seacr}
+# wrapper of plyranges::find_overlaps(); query-based consensus peaks; carry over the metadata
+seacr_file_x <- 
+  system.file('extdata',
+              'chr2_Rep1_H1_CTCF.stringent.bed',
+              package='peaklerrr')
+seacr_file_y <- 
+  system.file('extdata',
+              'chr2_Rep2_H1_CTCF.stringent.bed',
+              package='peaklerrr')
+                            
+x <- peaklerrr::read_seacr(seacr_file_x)
+y <- peaklerrr::read_seacr(seacr_file_y)
+minoverlap <- min(min(width(x)), min(width(y))) / 2
+consensus <- find_consensus_seacr(x, y, minoverlap = minoverlap)
+consensus
+
+```
+
+# Workflow
+`peakable:::peakle_flow()`

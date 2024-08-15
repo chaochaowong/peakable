@@ -1,0 +1,281 @@
+---
+title: "peaklerrr"
+format: revealjs
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.align = 'center')
+```
+
+Takeaways
+
+-   The *peaklerrr* package provides functions facilitating CUT&RUN and CUT&Tag-seq peak caller QC and downstream analysis
+
+-   Use QC as a guide, not conclusion
+
+## Modules
+
+1.  Read SEACR and MACS2 narrow/broad bed files
+2.  Extract summit utilities
+3.  Find consensus utilities
+4.  QC metrics on consolidated peak ranges
+    -   *peak-hit* binary matrix: viz by PCA
+
+    -   peaks read-count matrix: viz by PCA and Pearson coefficient heatmap
+
+```{r load-lib}
+library(peaklerrr)
+library(plyranges)
+library(dplyr)
+library(ggplot2)
+```
+
+## Module 1
+
+`read_seacr()`
+
+```{r read_seacr, echo=TRUE}
+seacr_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_CTCF.stringent.bed', 
+              package='peaklerrr')
+gr <- read_seacr(seacr_file)
+gr
+```
+
+## Module 1
+
+`read_macs2_narrow()`
+
+```{r read_macs2_narrow}
+# wrapper function of rtracklayer::import.bed()
+narrow_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
+              package='peaklerrr')
+gr <- read_macs2_narrow(narrow_file,
+                        drop_chrM = TRUE,
+                        keep_standard_chrom = TRUE,
+                        species = 'Homo_sapiens')
+gr 
+```
+
+## Module 1
+
+`read_macs2_broad()`
+
+```{r read_macs2_broad}
+broad_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_H3K27me3_peaks.broadPeak',
+              package='peaklerrr')
+gr <- read_macs2_broad(broad_file)
+gr
+```
+
+## Module 2
+
+`extract_summit_seacr(gr, summit_wid=NULL)`
+
+```{r extract_summit_seacr}
+seacr_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_CTCF.stringent.bed', 
+              package='peaklerrr')
+gr <- read_seacr(seacr_file)
+summit_seacr <- extract_summit_seacr(gr)
+summit_seacr
+```
+
+## Module 2
+
+`extract_summit_macs2(gr, summit_wid=NULL)`
+
+```{r extract_summit_macs2}
+narrow_file <- 
+  system.file('extdata', 
+              'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
+               package='peaklerrr')
+gr <- read_macs2_narrow(narrow_file)
+summit_macs2 <- extract_summit_macs2(gr)
+summit_macs2
+
+```
+
+## Module 3
+
+`find_consensus_seacr(x, y, minoverlap=NULL)`
+
+```{r find_consensus_seacr}
+# wrapper of plyranges::find_overlaps(); query-based consensus peaks; carry over the metadata
+seacr_file_x <- 
+  system.file('extdata',
+              'chr2_Rep1_H1_CTCF.stringent.bed',
+              package='peaklerrr')
+seacr_file_y <- 
+  system.file('extdata',
+              'chr2_Rep2_H1_CTCF.stringent.bed',
+              package='peaklerrr')
+                            
+x <- peaklerrr::read_seacr(seacr_file_x)
+y <- peaklerrr::read_seacr(seacr_file_y)
+consensus <- find_consensus_seacr(x, y, minoverlap = 40L)
+consensus
+```
+
+## Module 3
+
+`find_overlaps_venn(x, y, label_x, label_y)`
+
+```{r find_overlaps_venn}
+# wrapper function of ggVennDiagram
+minoverlap <- min(min(width(x)), min(width(y))) / 2
+find_overlaps_venn(x, y, 
+                   label_x = 'chr2_Rep1_H1_CTCF',
+                   label_y = 'chr2_Rep2_H1_CTCF',
+                   minoverlap = minoverlap)
+
+```
+
+## Module 3
+
+`find_consensus_macs(x, y, minoverlap = NULL)`
+
+```{r find_consensus_macs}
+# under construction on the metatdata 
+macs2_file_x <- 
+  system.file('extdata',
+              'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
+               package='peaklerrr')
+macs2_file_y <- 
+  system.file('extdata',
+              'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
+                package='peaklerrr')
+                            
+x <- peaklerrr::read_macs2_narrow(macs2_file_x)
+y <- peaklerrr::read_macs2_narrow(macs2_file_y)
+consensus <- find_consensus_macs2(x, y, minoverlap = 40L)
+consensus
+```
+
+## Module 4: peak-hits
+
+```{r peak-hit-excalidraw, echo=FALSE, out.width='60%'}
+image_file = file.path('/Users/cwo11/Projects/peaklerrr/inst/images/peak-hits.png')
+knitr::include_graphics(image_file)
+```
+
+## Module 4: peak-hits
+
+```{r sample-info, echo=FALSE}
+# construct a data.frame from sample information
+seacr_pattern = '\\.stringent.bed$'
+peak_df <- data.frame(
+  bed_file = list.files(
+    system.file('extdata', package = 'peaklerrr'),
+    full.names = TRUE, pattern=seacr_pattern)) %>%
+  dplyr::mutate(sample_id = 
+                  stringr::str_replace(basename(bed_file),
+                                       seacr_pattern, ''))      
+# 2) get sample information  
+sample_info <- data.frame(
+  sample_id = c('chr2_Rep1_H1_CTCF', 
+                'chr2_Rep2_H1_CTCF',
+                'chr2_Rep1_H1_H3K4me3',
+                'chr2_Rep2_H1_H3K4me3'),
+  antibody = c('CTCF', 'CTCF', 'H3K4me3', 'H3K4me3')) %>%
+  dplyr::left_join(peak_df, by='sample_id')
+```
+
+```{r show-sample-info}
+sample_info
+```
+
+## Module 4: peak-hits
+
+`consolidated_peak_hits(grl, min_overlap=NULL)`
+
+```{r consolidated_peak_hits}
+# read peak files
+grl <- lapply(sample_info$bed_file, read_seacr)
+names(grl) <- sample_info$sample_id
+
+hits_mat <- consolidated_peak_hits(grl)
+pcs <- peaklerrr:::.getPCA(hits_mat, sample_info, n_pcs=2)
+ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
+  geom_point() + theme_minimal()
+```
+
+## Module 4: peak-hits and workflow
+
+`peakle_flow`
+
+```{r read-an-example, eval=FALSE}
+bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
+bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
+#' peakle_flow (private): returns seacr$df (sample info) and 
+#' seacr$grl (a list of peak ranges)
+seacr <- 
+  peaklerrr:::peakle_flow(sample_df, #nf_sample_sheet
+                          result_dir = result_dir,
+                          peak_caller = 'SEACR-thres1p',
+                          peak_bed_dir = bed_dir, 
+                          peak_bed_pattern = bed_pattern) 
+saveRDS(seacr, file.path(data_dir, 'seacr.rds'))
+
+```
+
+```{r load-seacr}
+seacr <- readRDS("///Volumes/Active/lawlor_e/Shireen/CnT_Results/A673_anthracyclines_240130/R_proj/data/seacr.rds")
+names(seacr$df) # column names of the data.frame
+names(seacr$grl) # names of the peaksets
+```
+
+## Module 4: peak-hits and PCA
+
+```{r another-example-for-peak-hits}
+# viz consolidated peak hits by PCA
+seacr_hit_mat <- peaklerrr::consolidated_peak_hits(seacr$grl)
+seacr_hit_pca <- 
+  peaklerrr:::.getPCA(seacr_hit_mat, 
+                      sample_info=seacr$df, n_pcs=2)
+ggplot(seacr_hit_pca, aes(x=PC1, y=PC2, 
+                          color=antibody, shape=treatment)) +
+  geom_point() + theme_minimal() +
+  labs(title='PCA: SEACR peak-hits matrix')
+```
+
+## Module 4: read-counts matrix
+
+-   read counts on consolidated peaks -\> `DESeqDataSet`
+
+-   normalized by library size or spike-in factors
+
+-   regularized log transformation
+
+```{r peak_read_count, eval=FALSE}
+features <- peaklerrr::consolidate_peaks(seacr$grl)
+se <- peak_read_count(features, seacr$df)
+se <- DESeqDataSet(se, design = ~ treatment)
+se$sizeFactor <- se$lib_size_factor
+se_rlog <- DESeq2::rlog(se, blind=TRUE)
+gg <- DESeq2::plotPCA(se_rlog, ntop=nrow(se_rlog) * 0.5, 
+              intgroup=c('treatment', 'antibody'),
+              returnData=TRUE)
+```
+
+## Module 4 read-counts matrix
+
+```{r show-example-read-counts-pca, echo=FALSE}
+knitr::include_graphics(file.path("/Users/cwo11/Projects/peaklerrr/inst/images/peak-read-coverage-pca.png"))
+```
+
+## Module 4 read-counts matrix
+
+```{r peak-read-coverage-pearson, echo=FALSE}
+knitr::include_graphics(file.path("/Users/cwo11/Projects/peaklerrr/inst/images/peak-read-coverage-pearson.png"))
+```

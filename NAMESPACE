@@ -4,9 +4,9 @@ importFrom(GenomicAlignments, GAlignmentPairs, summarizeOverlaps)
 importFrom(GenomeInfoDb, keepStandardChromosomes, dropSeqlevels)
 importFrom(rtracklayer, import, export)
 importFrom(ggVennDiagram, ggVennDiagram)
-importFrom(purrr, map_df, map_dfc)
+importFrom(purrr, map_df, map_dfc, map)
 importFrom(tibble, add_column)
-importFrom(stringr, str_detect)
+importFrom(stringr, str_detect, str_replace)
 
 import(GenomicRanges, plyranges)
 import(dplyr)
@@ -27,6 +27,9 @@ export(consolidate_peaks,
 export(find_overlaps_venn)
 
 export(find_consensus_seacr,
-       find_consensus_macs2)
+       find_consensus_macs2,
+       consensus_by)
 
 export(peak_read_count)
+
+export(cos_similarity)

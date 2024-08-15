@@ -4,3 +4,5 @@ inst/scripts/make_test_files.R
 inst/images
 inst/docs
 template-namespace
+inst/doc/get-start-with-peakable.qmd
+inst/doc/get-start-with-peakable.html
