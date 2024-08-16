@@ -1,13 +1,26 @@
-.l2_norm <- function(x) {
-  sqrt(sum(x^2))
-}
+#' cos_similarity
+#'
+#' @param x GRanges
+#' @param y GRanges
+#' @export
+cos_similarity <- function(gr_x, gr_y) {
+  hits <- consolidated_peak_hits(list(gr_x, gr_y))
+  x <- hits[, 1, drop=TRUE]
+  y <- hits[, 2, drop=TRUE]
 
-cos_similarity <- function(x, y) {
-  # sanity check norm
-  norms <- .l2_norm(x) * .l2_norm(y)
+  # L2 norm
+  norms <- .L2_norm(x) * .L2_norm(y)
+
+  # sanity check
   if (norms < 1e-25)
     stop('L2 norm of x or y must be greater 0.')
-  
+
+  # cosine(theta)
   sim <- crossprod(x, y) / norms
+
   return(as.numeric(sim))
+}
+
+.L2_norm <- function(x) {
+  sqrt(sum(x^2))
 }

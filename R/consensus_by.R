@@ -1,5 +1,5 @@
 #' @importFrom stringr str_detect
-#'
+#' @export
 consensus_by <- function(sample_df,
                          peaks_grl,
                          consensus_group_by,
