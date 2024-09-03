@@ -77,7 +77,6 @@ sample_df <- read_csv(file.path(result_dir, 'data',
 
 # tidy up and customize 'sample_df'
 sample_df <- sample_df  %>%
-  dplyr::rename(antibody = 'Ab') %>%
   tidyr::drop_na(antibody) %>%
   dplyr::filter(!antibody == 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
