@@ -285,26 +285,24 @@ plotAnnoBar(macs2_annolst)
 ```
 
 
-# SEACR QC
+# SEACR 
 
-I have chosen not to use SEACR.
-
-Code chunks in this section would be mostly similar to the previous one.
 ```{r use-peak-flow-get-seacr-peaks}
 # get import SEACR bed files 
-bed_dir <- file.path(result_dir, 'peaks_calls', 'seacr_callpeak')
-bed_pattern <- '\\_threshold0.01_non.stringent.bed$'
+bed_dir <- file.path(result_dir, 'peak_calls', 'seacr_callpeak')
+bed_pattern <- '\\_norm.stringent.bed$'
+#bed_pattern <- '\\_threshold0.01_norm.stringent.bed$'
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 #' use the peakle_flow to return seacr$df (info) and 
 #' seacr$grl (peak ranges)
-seacr <- 
+seacr_stringent <- 
   peakable:::peakle_flow(sample_df, # must be from nf_sample_sheet
                          result_dir = result_dir,
-                         peak_caller = 'SEACR-thres1p',
+                         peak_caller = 'SEACR-stringent',
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_pattern,
                          bam_pattern = bam_pattern) 
 # pick one per sample_id
-saveRDS(seacr, file.path(data_dir, 'seacr_thres1p.rds'))
+saveRDS(seacr_stringent, file.path(data_dir, 'seacr_stringent.rds'))
 ```
