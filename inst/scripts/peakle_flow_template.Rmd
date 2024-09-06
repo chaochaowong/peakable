@@ -77,8 +77,6 @@ sample_df <- read_csv(file.path(result_dir, 'data',
 
 # tidy up and customize 'sample_df'
 sample_df <- sample_df  %>%
-  tidyr::drop_na(antibody) %>%
-  dplyr::filter(!antibody == 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
 saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
 ```
@@ -133,7 +131,7 @@ macs2_broad <- # return: df and grl
 # combine narrow and broad peaks
 macs2 <- peakable:::.macs2_bind(macs2_narrow, macs2_broad)
 
-#saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
+saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
 ```
 
 ```{r macs-replicate-consensus}
@@ -225,12 +223,10 @@ cos_sim <- macs2$df %>%
       sim <- NA
     
     if (nrow(x) > 1 & all(x$number_of_peaks > 0)) {
-      hit_map <- 
-        peakable::consolidated_peak_hits(macs2$grl[x$sample_id])
-      sim <- peakable:::cos_similarity(x=hit_map[, 1, drop=TRUE],
-                                       y=hit_map[, 2, drop=TRUE])
+      sim <- peakable:::cos_similarity(macs2$grl[[x$sample_id[1]]],
+                                       macs2$grl[[x$sample_id[2]]])
     } else {
-      sim <- 0
+      sim <- NA
     }
     
     data.frame(antibody = x$antibody[1],
