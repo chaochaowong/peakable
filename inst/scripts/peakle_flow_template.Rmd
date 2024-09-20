@@ -9,7 +9,7 @@ output:
     toc: true
     toc_depth: 3
     toc_float: true
-    code_folding: hide
+    code_folding: show
     highlight: tango
     fig_caption: true
 ---
@@ -22,7 +22,7 @@ $(document).ready(function(){
 </script>
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(eval = TRUE, 
+knitr::opts_chunk$set(eval = FALSE, 
                       echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE,
@@ -31,6 +31,7 @@ knitr::opts_chunk$set(eval = TRUE,
                       dev=c('png', 'svglite'))
 ```
 
+Load libraries:
 ```{r load-libraries}
 # load library
 library(tidyverse)
@@ -48,13 +49,14 @@ txDb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 # if using multi-cores
 library(BiocParallel)
-#BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
+BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
 
 # package developted by CJW
 # devtools::install_github('chaochaowong/peakalbe')
 library(peakable)
 ```
 
+Define directories:
 ```{r define-paths-and-variables}
 # define directories
 dir_header <- '///Volumes' # via MacBook
@@ -66,8 +68,11 @@ data_dir   <- file.path(Rproj_dir, 'data')
 fig_dir    <- file.path(Rproj_dir, 'figures')
 ```
 
+__`sample_df`__ data frame: Import a sample sheet or construct a `data.frame` of sample information. The code chuck below imports an existing sample sheet (`.csv`) that includes `sample_id`, `cell_line`, `antibody` columns. Note that `sample_id` is mandated for `sample_df`.
+
 ```{r nf-sample-sheet-to-rds}
 # - import nexflow sample sheet
+# 
 # - tidy up and save as 'sample_df.rds' in the data directory
 # - expect to have at least 'antibody' and 'cell_line' columns
 
@@ -75,8 +80,10 @@ fig_dir    <- file.path(Rproj_dir, 'figures')
 sample_df <- read_csv(file.path(result_dir, 'data', 
                             'nf-sample-sheet.csv')) 
 
-# tidy up and customize 'sample_df'
+# tidy up and customize 'sample_df': exclude IgG
 sample_df <- sample_df  %>%
+  dplyr::rename(antibody = Ab) %>% 
+  dplyr::filter(antibody != 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
 saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
 ```
@@ -90,11 +97,12 @@ sample_df <-
 
 # MACS2
 
-The code chunk below uses `peakable:::peakle_flow()` to import peak ranges (`grl`) and information (`df`) of bed/bam files paths and sample metadata (extracted from the _Nextflow_ sample sheet). Note that
+The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak ranges (`grl`) and bam files from bed/bam files paths and extract sample metadata from the user provided _Nextflow_ sample sheet.
 
 - `bam_pattern` was default fo '\\.markedDup.filter.sort.bam\$'     
-- `bed_pattern` and `bam_pattern` must include characters that can be removed for the files in order to restore the `sample_id` defined in nextflow sample sheet (`sample_df\$sample_id`)      
+- `bed_pattern` and `bam_pattern` must include characters that are subject to be removed for the files in order to restore the `sample_id` defined in  `sample_df$sample_id`
 - The path to `bam` files is set to `result_dir/samtools_sort` (I might in the future allow user to define the `bam_dir`)
+
 
 ```{r get-macs2-peaks}
 # use peakle_flow
@@ -109,6 +117,8 @@ df_narrow <- sample_df %>%
 
 df_broad <- sample_df %>% 
   dplyr::filter(antibody %in% c('K9me3', 'K27me3'))
+
+# make sure there is no IgG in antibody
 
 # narrow: df_narrow, bed_narrow_pattern 
 macs2_narrow <- # return: df and grl 
@@ -153,8 +163,19 @@ macs2_rep_consensus <- # use peakable:::consensus_by()
 # macs2_rep_consensus <- readRDS(file.path(data_dir, 
 #                                     'macs2_rep_consensus.rds'))
 ```
+## Sample information
+Display a table of MACS2 sample, alignment, and peak information.
+
+```{r display-macs2$df}
+macs2$df %>%
+  dplyr::select(sample_id, antibody, cell_line, 
+                read_paired, dup_rate, peak_caller, number_of_peaks) %>%
+  kable(caption='sample, peak, and aligment information')
+```
 
 ## Peak numbers
+Use `ggplot` to visualized peak numbers with the sample group, such as cell_line or antiboy.
+
 ```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log2. Threshold: q-value = 0.01.'}
 # viz peak number by bar plot
 macs2$df %>%
@@ -166,8 +187,7 @@ macs2$df %>%
     geom_text(aes(label=number_of_peaks), 
               vjust=0.5, hjust=1, color="white", size=3) +
     theme_minimal() +
-    theme(#panel.grid.minor = element_blank(),
-          panel.grid.major = element_blank(),
+    theme(panel.grid.major = element_blank(),
           legend.position = 'top')  +
   labs(title='MACS2 narrow and broad peak numbers') +
   scale_x_continuous(trans='log2') +
