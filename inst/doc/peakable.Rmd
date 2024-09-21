@@ -195,6 +195,7 @@ k4me3_cos_sim <- cos_similarity(gr_x = grl[["chr2_Rep1_H1_H3K4me3"]],
                                 gr_y = grl[["chr2_Rep2_H1_H3K4me3"]])
 ```
 ```{r vis-cos-sim, fig.align='left', fig.height=2, fig.width=6, fig.cap='cos similarity of peak hits between replicates'}
+# visualize by ggplot
 data.frame(antibody = c('CTCF', 'H3K4me3'),
            cos_sim = c(ctcf_cos_sim, k4me3_cos_sim)) %>%
   ggplot(aes(x=cos_sim, y=antibody)) +
@@ -218,17 +219,6 @@ x %>%
 ## Consensus for MACS2
 `find_consensus_macs2()`
 ```{r find-consensus-macs2}
-macs2_file_x <- 
-  system.file('extdata',
-              'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
-               package='peakable')
-macs2_file_y <- 
-  system.file('extdata',
-              'chr2_Rep2_H1_CTCF_peaks.narrowPeak',
-                package='peakable')
-                            
-x <- peakable::read_macs2_narrow(macs2_file_x)
-y <- peakable::read_macs2_narrow(macs2_file_y)
 consensus <- find_consensus_macs2(x, y, minoverlap = 40L)
 consensus
 ```
@@ -247,10 +237,11 @@ find_overlaps_venn(x, y,
 ```{r consensus-by}
 # consensus_by() group the grl by 'antibody' and returns a data.frame and a list of
 # two consensus ranges in GRanges instances
-consensus <- peakable:::consensus_by(sample_info, 
-             peaks_grl = grl,
-             consensus_group_by = 'antibody',
-             peak_caller = 'macs2')
+consensus <- 
+  peakable:::consensus_by(sample_info, 
+                          peaks_grl = grl,
+                          consensus_group_by = 'antibody',
+                          peak_caller = 'macs2')
 consensus$df
 head(consensus$grl[['CTCF']])
 ```
