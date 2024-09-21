@@ -11,7 +11,7 @@
 
 <meta name="author" content="Chao-Jen Wong" />
 
-<meta name="date" content="2024-09-20" />
+<meta name="date" content="2024-09-21" />
 
 <title>Getting started with the peakable package</title>
 
@@ -2052,7 +2052,7 @@ function toggle_visibility(id1) {
 
 <h1 class="title toc-ignore">Getting started with the peakable package</h1>
 <p class="author-name">Chao-Jen Wong</p>
-<h4 class="date">2024-09-20</h4>
+<h4 class="date">2024-09-21</h4>
 <h4 class="package">Package</h4>
 <p>peakable 0.99.22</p>
 
@@ -2063,10 +2063,15 @@ function toggle_visibility(id1) {
 <h1><span class="header-section-number">1</span> Getting started</h1>
 <p>The <code>peakable</code> package provides convenient methods for facilitating CUT&amp;RUN and CUT&amp;Tag-seq peaksets quality control and downstream analysis. The functionality breaks down into three parts:</p>
 <ol style="list-style-type: decimal">
-<li>Peak import/export</li>
+<li>Peak data import/export</li>
 <li>QC tools including PCA and cosine similarity based on peak hits</li>
 <li>Finding consensus between replicates</li>
 </ol>
+<div id="visit-bed-and-granges" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Visit BED and <code>GRanges</code></h2>
+<p>The BED file is the common format to store peak intervals. The Bioconductor package <code>rtracklayers</code> provides tools for importing and exporting stardardized BED+6 and BED+12 files, while <code>plyranges</code> offers functions specifically for MACS2 narrow peaks (<code>read_narrowPeaks()</code> and <code>write_narrowpeaks()</code>).</p>
+<p>The standardized BED+6 columns include <em>chromosome</em>, <em>start</em>, <em>end</em>, <em>name</em>, <em>score</em>, and <em>strand</em>. MACS2 narrow and broad peaks follow this stardard format with additional columns such as <em>signalValue</em>, <em>pValue</em>, <em>qValue</em>, and <em>peak</em> (only for narrow peaks). SEACR peaks, on the other hand, are in the BED+3 format with columns <em>chromosome</em>, <em>start</em>, and <em>end</em>, followed by additional columns <em>AUC</em>, <em>max.signal</em>, and <em>max.signal.region</em>. The <code>peakable</code> package provides convenient tools to both costom BED formats.</p>
+<p>In Bioconductor, the imported peaks are formatted as <code>GRanges</code> instances, a standard data structure for representing genomic intervals. The <code>plyranges</code> pacakge provides <code>dplyr</code>-like interface functions for arithematics on <code>GRanges</code>. For more information, please visit <a href="https://www.bioconductor.org/packages/release/bioc/vignettes/plyranges/inst/doc/an-introduction.html">here</a>.</p>
 <pre class="r"><code>library(rtracklayer)
 library(plyranges)
 library(dplyr)
@@ -2074,16 +2079,19 @@ library(stringr)
 library(purrr)
 library(ggplot2)
 
-# if peakable not instal yet: 
-# devtools::install_git(&#39;chaochaowong/peakable&#39;)
+# if peakable not install yet: 
+# devtools::install_github(&#39;chaochaowong/peakable&#39;)
 library(peakable)</code></pre>
+</div>
 </div>
 <div id="data-importexport" class="section level1" number="2">
 <h1><span class="header-section-number">2</span> Data import/export</h1>
+<p>The <code>peakable</code> package provides functions for importing and exporting MACS2 and SEACR custom BED files.</p>
+<p>While the plyranges package offers several functions for importing and exporting custom BED files, the peakable package provides additional tools to clean and organize the imported peaks.</p>
 <p>Although the <code>plyranges</code> package provides a number of functions to import and export costumed bed files, the <code>peakable</code> package provide additional facility to tidy up the imported peaks.</p>
 <div id="macs2-narrow-and-broad-peaks" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> MACS2 narrow and broad peaks</h2>
-<p>The <code>read_macs2_narrow()</code> and <code>read_macs2_broad()</code> functions are the wrapper functions to <code>rtracklayers::import.bed()</code>, facilitating the import of MACS2 narrow and broad peak files in the BED6+4 format. The imported intervals are formatted as <code>GRanges</code> instances.</p>
+<p><code>read_macs2_narrow()</code> and <code>read_macs2_broad()</code> are wrapper functions to <code>rtracklayers::import.bed()</code>, facilitating the import of MACS2 narrow and broad peak files in the BED6+4 format. The imported intervals are formatted as <code>GRanges</code> instances.</p>
 <div id="narrowpeaks" class="section level3" number="2.1.1">
 <h3><span class="header-section-number">2.1.1</span> narrowPeaks</h3>
 <p>Import MACS narrowPeaks and exclude non-essential chromosomes such as poorly annotated chromosomes (“chrUn_…”) and chrM:</p>
