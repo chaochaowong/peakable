@@ -33,26 +33,20 @@ The standardized BED+6 columns include _chromosome_, _start_, _end_, _name_, _sc
 
 In Bioconductor, the imported peaks are formatted as `GRanges` instances, a standard data structure for representing genomic intervals. The `plyranges` pacakge provides `dplyr`-like interface functions for arithematics on `GRanges`. For more information, please visit [here](https://www.bioconductor.org/packages/release/bioc/vignettes/plyranges/inst/doc/an-introduction.html).
 
+# Data import/export
+
+Load libraries:
 ```{r load-lib}
+# load libraries
 library(rtracklayer)
 library(plyranges)
 library(dplyr)
-library(stringr)
-library(purrr)
 library(ggplot2)
 
 # if peakable not install yet: 
 # devtools::install_github('chaochaowong/peakable')
 library(peakable)
 ```
-
-# Data import/export
-The `peakable` package provides functions for importing and exporting MACS2 and SEACR custom BED files.
-
-While the plyranges package offers several functions for importing and exporting custom BED files, the peakable package provides additional tools to clean and organize the imported peaks.
-
-Although the `plyranges` package provides a number of functions to import and export costumed bed files, the `peakable` package provide additional facility to tidy up the imported peaks.
-
 ## MACS2 narrow and broad peaks
 `read_macs2_narrow()` and `read_macs2_broad()` are wrapper functions to `rtracklayers::import.bed()`, facilitating the import of MACS2 narrow and broad peak files in the BED6+4 format. The imported intervals are formatted as `GRanges` instances.
 
