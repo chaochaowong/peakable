@@ -41,10 +41,13 @@ library(peakable)
 ```
 
 # Data import/export
+Although the `plyranges` package provides a number of functions to import and export costumed bed files, the `peakable` package provide additional facility to tidy up the imported peaks.
 
 ## MACS2 narrow and broad peaks
-We provide a wrapper to `rtracklayers::import.bed()` to accommodate the importing of MACS2 narrow and broad peak file in BED6+4 format. The imported intervals are formatted as `GRanges`.
+The `read_macs2_narrow()` and `read_macs2_broad()` functions are the wrapper functions to `rtracklayers::import.bed()`, facilitating the import of MACS2 narrow and broad peak files in the BED6+4 format. The imported intervals are formatted as `GRanges` instances.
 
+### narrowPeaks
+Import MACS narrowPeaks and exclude non-essential chromosomes such as poorly annotated chromosomes ("chrUn_...") and chrM:
 ```{r read_macs2_narrow}
 # wrapper function of rtracklayer::import.bed()
 narrow_file <- 
@@ -58,15 +61,21 @@ gr <- read_macs2_narrow(narrow_file,
 gr 
 ```
 
-Alternatively, `plyranges::read_narrowPeaks()` is also a wrapper function to import MACS2 _narrowPeaks_.
+Alternatively, `plyranges::read_narrowPeaks()` is also a wrapper function provided by the `plyranges` package to import MACS2 _narrowPeaks_ files.
 
-The `extract_summit_macs2` function extract the summit from the peack ranges.
+The `extract_summit_macs2` function extracts the summit from the peak ranges:
 ```{r extract-macs2-summit}
 # extract summit for MACS2 narrowPeaks
 summit_macs2 <- extract_summit_macs2(gr)
 summit_macs2
+
+# to export a summit GRanges to a bed file, use rtracklayer::export.bed(summit_macs, file=...)
 ```
 
+To exporting a summit _Granges_ to a bed file, use `rtracklayer::export.bed`. To exporting MACS2 narrowPeaks and preserve the format, use `plyranges::write_narrowPeaks()`.
+
+### broadPeaks
+`read_macs2_broad()` imports MACS2 broadPeaks files:
 
 ```{r read_macs2_broad}
 broad_file <- system.file('extdata', 
@@ -79,40 +88,62 @@ gr <- read_macs2_broad(broad_file,
 gr
 ```
 
-`plyranges::write_narrowPeaks()`
-`write_boradPeaks()`
+Need to work on `peakable::write_brodPeaks()`.
 
-## SEARC
+## SEACR
+The `peakable` package provides functions, such as `read_seacr()`, `extract_summit_searcr()`, and `write_seacr()`, for importing and exporting SEACR-specific peak files.
+
+### Import
+The metadata columns of SEACR peaks include "AUC", "max.signal", and "max.signal.region" corresponding to peak area under curve, maxinum signal within the peak, and the summit region of the peak.
 ```{r read_seacr}
 seacr_file <- system.file('extdata',
                           'chr2_Rep1_H1_CTCF.stringent.bed',
                           package='peakable')
-gr <- read_seacr(seacr_file,
+seacr_gr <- read_seacr(seacr_file,
                  drop_chrM = TRUE,
                  keep_standard_chrom = TRUE,
                  species = 'Homo_sapiens')
-gr
+seacr_gr
 ```
+
+The `extract_summit_seacr()` function extracts summit region from the SEACR peaks:
 ```{r extract-summit-seacr}
-summit_seacr <- extract_summit_seacr(gr)
+summit_seacr <- extract_summit_seacr(seacr_gr)
 summit_seacr
 ```
 
-`write_seacr`
+### Export
+The `write_seacr()` function exports the SEACR peaks in SEACR-specific bed format:
+```{r write-seacr, eval=FALSE}
+write_seacr(seacr_gr, file=file.path('./seacr_peaks.bed'))
+```
 
 
 # Peakset QC
-Peak hits matrix and PCA
 
-## Construction of peak hits matrix
-```{r peak-hit-excalidraw, echo=FALSE, out.width='120%', fig.cap='Peak hits mat'}
+The `peakable` package provides two innovative methods for evaluating the correlation of peak ranges across samples of different antibodies and the similarity between biological repliates.
+
+Both methods involve constructing a peak-hit matix from a collection of peaksets across samples of interest:
+
+__Concepts:__
+
+1. __Constructing a collection of the peaksets of intesrest $C$__: Suppose sample $s$ has a peakset $P_s=\{p_1, p_2, ..., p_l\}$, and there are $m$ peaksets of insterests, $P=\{P_1, P_2, ..., P_s, ..., P_m\}$. The collection of peaksets $C$ is formed by cosolidating and merging nearby ranges in $P$, resulting in a set of $n$ distinct peak ranges.
+2. __Building a binary overlap vector for each sample peakset__: For $P_s$, building an overlap vector of size $1 \times n$ with $i$th entry = 1 if any peak range in $P_s$ hits the $i$th range in $C$, or 0 otherwise. 
+3. __Building a $n \times m$ peak-hit matrix__: Cancatenating $m$ binary vectors column by column to form an $n-by-m$ peak-hit matrix, where each column corresponds to a sample and each row represents a peak range in $C$.
+
+
+```{r peak-hit-excalidraw, echo=FALSE, out.width='120%', fig.cap='Peak-hit matrix'}
 img <- system.file('images', 'peak-hits.png',
                     package='peakable')
 knitr::include_graphics(img)
 ```
-The code chunk below makes a sample information data.frame:
+
+## Peak-based PCA
+Once the peak-hit matrix is constructed, we can apply PCA to observe the correlation across peaksets of samples of interest. First, let's contrust a `data.frame` of sample and peak bed files information:
+
+
 ```{r sample-info}
-# construct a data.frame from sample information
+# construct a data.frame of sample information
 narrow_pattern = '\\_peaks.narrowPeak$'
 sample_info <- data.frame(
   bed_file = list.files(
@@ -131,7 +162,7 @@ sample_info %>%
   kableExtra::kable_styling('striped')
 ```
 
-Import the peak files as a list of `GRanges`:
+Second, import the peak files as a list of `GRanges`:
 ```{r import-bed-files}
 # import bed files
 grl <- lapply(sample_info$bed_file, read_macs2_narrow, 
@@ -141,19 +172,20 @@ grl <- lapply(sample_info$bed_file, read_macs2_narrow,
 names(grl) <- sample_info$sample_id
 ```
 
-## PCA
-Consolidate the peaks to make the peak hits (`consolidate_peak_hits`)
+Finally, consolidate the peaks to make the peak-hit matrix (`consolidate_peak_hits()`):
 
 ```{r create-hit-matrix-pca}
+# construct hit matrix and calculate hit PCA
 hits_mat <- peakable::consolidated_peak_hits(grl)
-pcs <- peaklerrr:::.getPCA(hits_mat, sample_info, n_pcs=2)
+pcs <- peakable:::.getPCA(hits_mat, sample_info, n_pcs=2)
 ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
   geom_point() + theme_minimal()
 ```
 
 ## Cosine similarity
-hits-based cosine similarity between replicates:
-```{r cos-sim, fig.height=2, fig.width = 6, fig.cap='cos similarity of peak hits between replicates'}
+The `cos_similarity()` constructs a peak-hits-based matrix of two sets of peaks, with column $u$ and $v$ and apply cos similarity between two binary vectors $\vec{u}$ and $\vec{v}$, i.e., $\frac{\vec{u} \cdot \vec{v}}{\|\vec{u}\|_2 \|\vec{v}\|_2}$.
+
+```{r cos-sim}
 # CTCF replicates
 ctcf_cos_sim <- cos_similarity(gr_x = grl[["chr2_Rep1_H1_CTCF"]],
                                gr_y = grl[["chr2_Rep2_H1_CTCF"]])
@@ -161,6 +193,8 @@ ctcf_cos_sim <- cos_similarity(gr_x = grl[["chr2_Rep1_H1_CTCF"]],
 # H3K4me3 replicates
 k4me3_cos_sim <- cos_similarity(gr_x = grl[["chr2_Rep1_H1_H3K4me3"]],
                                 gr_y = grl[["chr2_Rep2_H1_H3K4me3"]])
+```
+```{r vis-cos-sim, fig.align='left', fig.height=2, fig.width=6, fig.cap='cos similarity of peak hits between replicates'}
 data.frame(antibody = c('CTCF', 'H3K4me3'),
            cos_sim = c(ctcf_cos_sim, k4me3_cos_sim)) %>%
   ggplot(aes(x=cos_sim, y=antibody)) +
@@ -170,9 +204,18 @@ data.frame(antibody = c('CTCF', 'H3K4me3'),
     theme_light() +
     labs(title='MACS2 narrow peakets: cos similarity between replicates')
 ```
-# Finding consensus
 
-## consensus for MACS2
+# Finding consensus
+The `plyranges` package provides many tools, such as `find_overlaps`, `filter_by_overlaps`, to find the overlaps between two peaksets (`GRanges`) while preserving the metadata columns of the peaks. For example:
+
+```{r filter_by_overpals}
+x <- grl[['chr2_Rep1_H1_CTCF']]
+y <- grl[['chr2_Rep2_H1_CTCF']]
+x %>%
+  plyranges::filter_by_overlaps(y, minoverlap = 40L)
+```
+
+## Consensus for MACS2
 `find_consensus_macs2()`
 ```{r find-consensus-macs2}
 macs2_file_x <- 
