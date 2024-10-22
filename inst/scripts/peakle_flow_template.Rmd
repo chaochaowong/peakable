@@ -1,5 +1,5 @@
 ---
-title: "[project_name] QC and downstream analysis"
+title: "[project_name] Peak QC"
 author: "John Doe"
 date: "`r Sys.Date()`"
 output:
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(eval = FALSE,
                       message = FALSE,
                       fig.align = 'center',
                       knitr.svg.object = TRUE,
-                      dev=c('png', 'svglite'))
+                      dev=c('png', 'svglite', 'pdf'))
 ```
 
 Load libraries:
