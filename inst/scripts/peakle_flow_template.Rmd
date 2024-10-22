@@ -52,7 +52,7 @@ library(BiocParallel)
 BiocParallel::register(BPPARAM=MulticoreParam(worker=4))
 
 # package developted by CJW
-# devtools::install_github('chaochaowong/peakalbe')
+# devtools::install_github('chaochaowong/peakable')
 library(peakable)
 ```
 
