@@ -82,7 +82,6 @@ sample_df <- read_csv(file.path(result_dir, 'data',
 
 # tidy up and customize 'sample_df': exclude IgG
 sample_df <- sample_df  %>%
-  dplyr::rename(antibody = Ab) %>% 
   dplyr::filter(antibody != 'IgG') %>%
   dplyr::select(-single_end, -target_or_control, -read1, -read2)                            
 saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))

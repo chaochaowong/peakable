@@ -166,10 +166,19 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     }
   }
 
+    #
+  # check point
+  #
+  if (!identical(nrow(peak_df), nrow(sample_df))) {
+    msg <- sprintf('The number of peak files does not match with that of the non-IgG samples: %s',
+                   setdiff(sample_df$sample_id, peak_df$sample_id))
+    message(msg)
+  }
+
   # tidyup and remove peakcall_id
   peak_df <- peak_df %>% dplyr::select(-peakcall_id)
 
-  # 4) define the peak ranges
+  # 4) define the peak ranges reader
 
   if (str_detect(peak_caller, 'seacr'))
     peak_call_func <- peakable::read_seacr
