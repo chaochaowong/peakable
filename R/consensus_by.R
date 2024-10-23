@@ -1,4 +1,4 @@
-#' @importFrom stringr str_detect
+#' @importFrom stringr str_detect str_replace_all
 #' @export
 consensus_by <- function(sample_df,
                          peaks_grl,
@@ -73,7 +73,9 @@ consensus_by <- function(sample_df,
 
   # Create a unique name for each list element
   list_df <- keys %>%
-    dplyr::mutate(sample_id = apply(., 1, paste, collapse = "_"))
+    dplyr::mutate(sample_id = apply(., 1, paste, collapse = "_")) %>%
+    dplyr::mutate(sample_id = stringr::str_replace_all(sample_id,
+                                                       '_NA', ''))
 
 
   # granges list

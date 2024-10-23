@@ -166,7 +166,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     }
   }
 
-    #
+  #
   # check point
   #
   if (!identical(nrow(peak_df), nrow(sample_df))) {

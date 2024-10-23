@@ -128,7 +128,6 @@ macs2_narrow <- # return: df and grl
                          peak_bed_pattern = bed_narrow_pattern,
                          bam_pattern = bam_pattern) 
 
-#bed_pattern  <- '\\_peaks.broadPeak$'
 macs2_broad <- # return: df and grl 
   peakable:::peakle_flow(sample_df = df_broad, 
                          result_dir = result_dir,
@@ -152,8 +151,8 @@ macs2_rep_consensus <- # use peakable:::consensus_by()
                                                  'antibody'),
                           peak_caller = 'macs2')
 
-#saveRDS(macs2_rep_conensus, 
-#        file=file.path(data_dir, 'macs2_rep_consensus.rds'))
+saveRDS(macs2_rep_consensus, 
+        file=file.path(data_dir, 'macs2_rep_consensus.rds'))
 ```
 
 ```{r load-peak-rds}
