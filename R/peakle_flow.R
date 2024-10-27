@@ -25,9 +25,10 @@
 #'   geom_point() + theme_minimal() +
 #'   labs(title='PCA: SEACR peak-hits matrix')
 #'}
-.set_bam_params <- function(result_dir, bam_pattern) {
+.set_bam_params <- function(result_dir, bam_dir, bam_pattern) {
   #' ignore bam_dir and bam_pattern
-  bam_dir <- file.path(result_dir, 'samtools_sort')
+  if (is.null(bam_dir))
+    bam_dir <- file.path(result_dir, 'samtools_sort')
 
   if (is.null(bam_pattern)) {
     bam_pattern <- '\\.markedDup.filter.sort.bam$'
@@ -75,7 +76,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         peak_caller,
                         peak_bed_dir,
                         peak_bed_pattern,
-                        bam_pattern = NULL,
+                        bam_dir = NULL, # default to samtools_sort
+                        bam_pattern = NULL, # default to '\\.markedDup.stats$'
                         species = "Homo_sapiens") {
   require(dplyr)
   require(stringr)
@@ -90,8 +92,13 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   if (!file.exists(peak_bed_dir))
     stop(peak_bed_dir, ' does not exist.')
 
-  # define parameters and patterns
-  bam_params <- .set_bam_params(result_dir, bam_pattern)
+  if (!is.null(bam_dir) & !file.exists(bam_dir))
+    stop(bam_dir, ' does not exist.')
+
+  # define bam_dir and patterns
+  bam_params <- .set_bam_params(result_dir, bam_dir, bam_pattern)
+
+  # define stats_dir
   samtools_params <- .set_samtools_params(result_dir)
 
   # assign parameters
@@ -123,6 +130,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     message('Sorting samtools stats ...')
     stats_df <- .samtools_stats(stats_dir, stats_pattern)
   } else {
+    message(stats_dir, ' does not exist. Set samtools stats to null')
     stats_df <- NULL
   }
 

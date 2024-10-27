@@ -133,3 +133,25 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
 
   return(summit)
 }
+
+
+#' write_broadpeaks
+#'
+write_broadpeaks <- function(x, file) {
+  extra_cols <- c("signalValue", "pValue", "qValue")
+  valid_broad <- all(extra_cols %in% names(mcols(x)))
+
+  if (!valid_broad) {
+    stop(paste("For a valid MACS2 broad peak there must be columns called:",
+               paste(extra_cols, collapse = ","), "in x."), call. = FALSE)
+  }
+
+  broad_col_order <- c("seqnames", "start", "end", "name", "score",
+                       "strand", extra_cols)
+  broad_df <- as.data.frame(x)[, broad_col_order]
+  utils::write.table(broad_df, file,
+                     sep = "\t", row.names = FALSE,
+                     col.names=FALSE,
+                     na = ".",
+                     quote = FALSE)
+}
