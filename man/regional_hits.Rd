@@ -1,15 +1,15 @@
-\name{regional_hits}
+\name{peak_hits}
 \alias{regionhit_per_sample_mat}
 \alias{consolidated_peak_hits}
 \alias{consolidate_peaks}
-\title{Read a MACS2 narrowPeak and broadPeak BED file}
+\title{Merge peak sets as a corpus and construct a peak hit matrix}
 \description{
-  Construct a hit matrix of peaks against a collection of peaks
+  Merge peaks from a list of peak ranges (\code{GRanges}) and construct a peak hit matrix
 }
 
 \usage{
   consolidated_peak_hits(grl, min_overlap=NULL)
-  
+
   consolidate_peaks(grl)
 
   regionhit_per_sample_mat(regions, grl, min_overlap=NULL)
@@ -23,9 +23,9 @@
 
 \details{
   The \code{consolidated_peak_hits} function consolidates and merges a list of peaks or a \code{GRagnesList} into a \code{GRanges} object. Suppose there are m number of samples (length of the input \code{grl}) and n number of consolidated peaks,  \code{consolidated_peak_hits} constructs a n-by-m matrix with an entry of 1 if a sample's peak hit the consolidated peaks, and 0 otherwise. What can we do with this type of matrix?
-    
+
   The \code{consolidate_peaks} function consolidates (merges) and mergess a list of peaks or a \code{GRangesList} into a \code{GRanges} object.
-  
+
   The \code{regionhit_per_sample_mat} function constructs a n-by-m matrix with an entry of 1 if the sample's peak hit the consolidated peaks, and 0 otherwise, where n is the length of the input regions (\code{GRanges}) and m is number of samples (length of the input list \code{grl}).
 }
 
@@ -39,12 +39,12 @@
 # 1) get SEACR bed files
 library(dplyr)
 library(ggplot2)
-seacr_pattern = '\\.stringent.bed$'
+seacr_pattern = '\\\.stringent.bed$'
 peak_df <- data.frame(
   bed_file = list.files(system.file('extdata', package = 'peakable'),
-                       full.names = TRUE, pattern=seacr_pattern)) %>%
-  dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file), seacr_pattern, ''))      
-# 2) get sample information  
+                       full.names = TRUE, pattern=seacr_pattern)) \%>\%
+  dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file), seacr_pattern, ''))
+# 2) get sample information
 sample_info <- data.frame(
   sample_id = c('chr2_Rep1_H1_CTCF', 'chr2_Rep2_H1_CTCF',
                 'chr2_Rep1_H1_H3K4me3', 'chr2_Rep2_H1_H3K4me3'),
@@ -64,7 +64,7 @@ pcs <- peakable:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
 ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
   geom_point() +
   theme_minimal()
-  
+
 
 #
 # another example for MACS2 narrow peaks
@@ -76,22 +76,22 @@ macs2_pattern = '\\.narrowPeak$'
 sample_info <- data.frame(
   bed_file = list.files(system.file('extdata', package = 'peakable'),
                        full.names = TRUE, pattern=macs2_pattern)) %>%
-  dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file), 
+  dplyr::mutate(sample_id = stringr::str_replace(basename(bed_file),
                                                  macs2_pattern, '')) %>%
-  dplyr::mutate(antibody = c("CTCF", "H3K4me3", "CTCF", "H3K4me3"))                                                 
+  dplyr::mutate(antibody = c("CTCF", "H3K4me3", "CTCF", "H3K4me3"))
 grl <- lapply(sample_info$bed_file, read_macs2_narrow)
 names(grl) <- sample_info$sample_id
 
 # 4) get the hit matrix against consolidated peaks of four samples
 hits_mat <- consolidated_peak_hits(grl)
 
-# 5) PCA: visualize the peaks coorelation bewteen replicates and the difference 
+# 5) PCA: visualize the peaks coorelation bewteen replicates and the difference
 # across antibodies, for example:
 pcs <- peakable:::.getPCA(hits_mat, sample_info=sample_info, n_pcs=2)
 ggplot(pcs, aes(x=PC1, y=PC2, color=antibody)) +
   geom_point() +
   theme_minimal()
-  
+
 }
 
 \seealso{
