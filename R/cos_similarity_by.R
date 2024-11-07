@@ -77,6 +77,7 @@ cos_similarity_by <- function(sample_df,
   list_df <- keys %>%
     dplyr::mutate(group_id = apply(., 1, paste, collapse = "_")) %>%
     dplyr::mutate(group_id = stringr::str_replace_all(group_id,
+                                                      '_NA', ''))
   # set name for sim_df                                                     '_NA', ''))
   sim_df <- setNames(keys, list_df$group_id)
   # combine the list of data.frame with additional column indicating
