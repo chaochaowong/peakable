@@ -60,9 +60,12 @@ Define directories:
 ```{r define-paths-and-variables}
 # define directories
 dir_header <- '///Volumes' # via MacBook
-result_dir <- file.path(dir_header, 'Active',
-                        'sarthy_j/Sarthy/Sarthy_Lab/CUTRUN_Records',
-                        'CZe1_CnT_K562_WT_KO_05202024')
+assoc_path <- '/data/hps/assoc/private/sarthy_lab'
+result_dir <- file.path(assoc_path, 'NGS', 
+                        'CUTnRUN_Results',
+                        'GBe14_WSU-AML_CMS_FHD286_BRG1_Mods_CnT_20241028')
+
+qc_dir <- file.path(result_dir, 'peak_qc')
 
 # create R_proj folder
 setwd(result_dir)
@@ -189,6 +192,7 @@ map2(macs2_rep_consensus$grl, names(macs2_rep_consensus$grl),
        }
 })
 
+```
 
 ## Sample information
 ```{r load-peak-rds}
@@ -203,10 +207,11 @@ Display a table of MACS2 sample, alignment, and peak information.
 macs2$df %>%
   dplyr::select(sample_id, antibody, cell_line, 
                 read_paired, dup_rate, peak_caller, number_of_peaks) %>%
-  kable(caption='sample, peak, and aligment information')
+  kable(caption='sample, peak, and samtools stats information') %>%
+  kableExtra::kable_styling('striped')
 ```
 
-## Peak numbers
+# Peak numbers
 Use `ggplot` to visualized peak numbers with the sample group, such as cell_line or antiboy.
 
 ```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log10. Threshold: q-value = 0.01.'}
@@ -261,7 +266,7 @@ ggplot(macs2_hit_pca, aes(x=PC1, y=PC2,
   labs(title='PCA: MACS2 peak-hit')
 ```
 
-## Replicate similarity
+# Replicate similarity
 
 The code chuck below assumes the samples only have duplicates. You will have to modify the code if you have triplicates.
 
@@ -283,7 +288,7 @@ sim_df %>%
     labs(title='replicates cos similarity')
 ```
 
-## Consensus peaks
+# Consensus peaks
 
 ```{r macs2-consensus-peak-number}
 # display macs2_rep_consensus
@@ -302,7 +307,7 @@ ggplot(aes(x=number_of_peaks, y=sample_id,
   theme(legend.position = 'none')
 ```
 
-## Functional annotation and feature distribution
+# Functional annotation and feature distribution
 - Use `ChIPseeker` to annotate the consensus peaks
 - Plot feature distribution
 
