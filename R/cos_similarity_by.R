@@ -52,9 +52,9 @@ cos_similarity_by <- function(sample_df,
   return(sim_df)
 }
 
-.construct_cos_sim_grl(peaks_grl,
-                       sample_df,
-                       sim_group_by) {
+.construct_cos_sim_grl <- function(peaks_grl,
+                                   sample_df,
+                                   sim_group_by) {
   sim_df <- sample_df %>%
     dplyr::group_split(across(all_of(sim_group_by))) %>%
     map(function(x) {
