@@ -22,6 +22,7 @@ cos_similarity_by <- function(sample_df,
   # validate sim_group_by
   is_valid <- all(sim_group_by %in% colnames(sample_df))
   invalid_cols <- sim_group_by[!sim_group_by %in% colnames(sample_df)]
+
   if (!is_valid)
     stop('Invalid columns in replicates_group_by:', invalid_cols)
 
@@ -29,7 +30,6 @@ cos_similarity_by <- function(sample_df,
   cos_sim <- .construct_cos_sim_grl(peaks_grl,
                                     sample_df,
                                     sim_group_by)
-
 }
 
 .paired_sim_df <- function(combn_pair, x, peaks_grl) {
@@ -79,8 +79,9 @@ cos_similarity_by <- function(sample_df,
     dplyr::mutate(group_id = stringr::str_replace_all(group_id,
                                                       '_NA', ''))
   # set name for sim_df                                                     '_NA', ''))
-  sim_df <- setNames(keys, list_df$group_id)
+  sim_df <- setNames(sim_df, list_df$group_id)
   # combine the list of data.frame with additional column indicating
   # how replicated are grouped together
-  sim_df <- bind_rows(sim_df, .id='sim_group_by')
+  sim_df <- bind_rows(sim_df, .id='group_id') %>%
+    dplyr::left_join(list_df, by='group_id')
 }
