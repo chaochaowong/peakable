@@ -87,13 +87,6 @@ sample_df <- sample_df  %>%
 saveRDS(sample_df, file.path(Rproj_dir, 'data', 'sample_df.rds'))
 ```
 
-```{r load-and-tidy-sample-df}
-#' sample_df is originated from the nextflow sample sheet
-sample_df <- 
-  readRDS(file.path(Rproj_dir, 'data', 'sample_df.rds')) 
-```
-
-
 # MACS2
 
 The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak ranges (`grl`) and bam files from bed/bam files paths and extract sample metadata from the user provided _Nextflow_ sample sheet.
@@ -103,7 +96,7 @@ The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak
 - The path to `bam` files is set to `result_dir/samtools_sort` (I might in the future allow user to define the `bam_dir`)
 
 
-```{r get-macs2-peaks}
+```{r get-macs2-peaks, eval=FALSE}
 # use peakle_flow
 bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
 bed_narrow_pattern <- '\\_peaks.narrowPeak$'
@@ -112,10 +105,10 @@ bed_broad_pattern  <- '\\_peaks.broadPeak$'
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 df_narrow <- sample_df %>% 
-  dplyr::filter(!antibody %in% c('K9me3', 'K27me3'))
+  dplyr::filter(!str_detect(antibody, 'K9me3|K27me3'))
 
 df_broad <- sample_df %>% 
-  dplyr::filter(antibody %in% c('K9me3', 'K27me3'))
+  dplyr::filter(str_detect(antibody, 'K9me3|K27me3'))
 
 # make sure there is no IgG in antibody
 
@@ -142,7 +135,7 @@ macs2 <- peakable:::.macs2_bind(macs2_narrow, macs2_broad)
 saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
 ```
 
-```{r macs-replicate-consensus}
+```{r macs-replicate-consensus, eval=FALSE}
 # replicates consensus
 macs2_rep_consensus <- # use peakable:::consensus_by()
   peakable:::consensus_by(sample_df = macs2$df,
@@ -155,13 +148,43 @@ saveRDS(macs2_rep_consensus,
         file=file.path(data_dir, 'macs2_rep_consensus.rds'))
 ```
 
+```{r macs-consensus-summit-bed, message=FALSE, eval=FALSE}
+# narrow peaks only
+is_narrow <- function(peaks) {
+  any(names(mcols(peaks)) == 'peak')
+}
+
+map2(macs2_rep_consensus$grl, names(macs2_rep_consensus$grl), 
+     function(peaks, name) {
+       # check if narrow peaks
+         if (is_narrow(peaks)) {
+           summit <- peakable::extract_summit_macs2(peaks)
+           plyranges::write_bed(summit, 
+                                file = file.path(consensus_peak_dir, 
+                                                 paste0(name,
+                                                        '_consensus_summit.bed')))
+           plyranges::write_narrowpeaks(peaks, 
+                                        file = file.path(consensus_peak_dir,
+                                                         paste0(name,
+                                                                '.narrowPeak.bed')))
+         }
+       
+       if (!is_narrow(peaks)) {
+           # export consensus
+           peakable::write_broadpeaks(peaks, 
+                                      file = file.path(consensus_peak_dir,
+                                                       paste0(name, '.broadPeak.bed')))
+       }
+})
+
+
+## Sample information
 ```{r load-peak-rds}
 # load peaks 
-# macs2 <- readRDS(file.path(data_dir, "macs2.rds"))
-# macs2_rep_consensus <- readRDS(file.path(data_dir, 
-#                                     'macs2_rep_consensus.rds'))
+macs2 <- readRDS(file.path(data_dir, "macs2.rds"))
+macs2_rep_consensus <- readRDS(file.path(data_dir, 
+                                         'macs2_rep_consensus.rds'))
 ```
-## Sample information
 Display a table of MACS2 sample, alignment, and peak information.
 
 ```{r display-macs2$df}
@@ -174,7 +197,7 @@ macs2$df %>%
 ## Peak numbers
 Use `ggplot` to visualized peak numbers with the sample group, such as cell_line or antiboy.
 
-```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log2. Threshold: q-value = 0.01.'}
+```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log10. Threshold: q-value = 0.01.'}
 # viz peak number by bar plot
 macs2$df %>%
   dplyr::arrange(antibody, cell_line) %>%
@@ -188,7 +211,7 @@ macs2$df %>%
     theme(panel.grid.major = element_blank(),
           legend.position = 'top')  +
   labs(title='MACS2 narrow and broad peak numbers') +
-  scale_x_continuous(trans='log2') +
+  scale_x_continuous(trans='log10') +
   theme(legend.position = 'none')
 ```
 
@@ -230,43 +253,25 @@ ggplot(macs2_hit_pca, aes(x=PC1, y=PC2,
 
 The code chuck below assumes the samples only have duplicates. You will have to modify the code if you have triplicates.
 
-```{r macs-cos-sim}
-#' (1) build hit mat between duplicates
-#' (2) cos similarity
-
-cos_sim <- macs2$df %>%
-  group_split(antibody, cell_line) %>%
-  map_dfr(function(x) {
-    if (nrow(x) == 1) 
-      sim <- NA
-    
-    if (nrow(x) > 1 & all(x$number_of_peaks > 0)) {
-      sim <- peakable:::cos_similarity(macs2$grl[[x$sample_id[1]]],
-                                       macs2$grl[[x$sample_id[2]]])
-    } else {
-      sim <- NA
-    }
-    
-    data.frame(antibody = x$antibody[1],
-               cell_line = x$cell_line[1],
-               name = paste(x$sample_id, collapse = '-vs-'),
-               cos_sim = sim)
-  })
+```{r cos-sim-by, fig.cap='Replicates cos similarity'}
+sim_group_by = c('cell_line', 'antibody')
+sim_df <- peakable::cos_similarity_by(sample_df = macs2$df,
+                                      peaks_grl = macs2$grl,
+                                      sim_group_by = sim_group_by)
 ```
 
 ```{r viz-macs-cos-sim}
-cos_sim %>%
+sim_df %>%
   ggplot(aes(x=cos_sim, y=antibody)) +
     geom_point() +
     geom_segment(aes(x=0, y=antibody, xend=cos_sim, 
                      yend=antibody), color='grey50') +
     theme_light() +
     facet_wrap(~cell_line, nrow=2) +
-    labs(title='cos similarity')
+    labs(title='replicates cos similarity')
 ```
 
 ## Consensus peaks
-
 
 ```{r macs2-consensus-peak-number}
 # display macs2_rep_consensus
