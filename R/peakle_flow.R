@@ -92,8 +92,9 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   if (!file.exists(peak_bed_dir))
     stop(peak_bed_dir, ' does not exist.')
 
-  if (!is.null(bam_dir) & !file.exists(bam_dir))
-    stop(bam_dir, ' does not exist.')
+  if (!is.null(bam_dir)) {
+     stopifnot(file.exist(bam_dir))
+  }
 
   # define bam_dir and patterns
   bam_params <- .set_bam_params(result_dir, bam_dir, bam_pattern)
