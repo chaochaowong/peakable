@@ -116,7 +116,7 @@ The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak
 bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
 bed_narrow_pattern <- '\\_peaks.narrowPeak$'
 bed_broad_pattern  <- '\\_peaks.broadPeak$'
-#bam_dir <- file.path(result_dir, 'samtools_sort')
+bam_dir <- file.path(result_dir, 'samtools_sort')
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 df_narrow <- sample_df %>% 
@@ -134,6 +134,7 @@ macs2_narrow <- # return: df and grl
                          peak_caller = 'MACS2-narrow',
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_narrow_pattern,
+                         bam_dir = bam_dir,
                          bam_pattern = bam_pattern) 
 
 macs2_broad <- # return: df and grl 
@@ -142,6 +143,7 @@ macs2_broad <- # return: df and grl
                          peak_caller = 'MACS2-broad',
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_broad_pattern,
+                         bam_dir = bam_dir,
                          bam_pattern = bam_pattern) 
 
 # combine narrow and broad peaks
