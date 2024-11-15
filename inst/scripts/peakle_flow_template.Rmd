@@ -196,6 +196,17 @@ map2(macs2_rep_consensus$grl, names(macs2_rep_consensus$grl),
 
 ```
 
+```{r macs2-functional-annotation, message=FALSE, eval=FALSE}
+# make sure the GRanges is not empty before using # ChIPseeker::anotatePeak()
+keep <- macs2_rep_consensus$df %>%
+  dplyr::filter(number_of_peaks > 0) %>% pull(sample_id)
+
+macs2_annolst <- bplapply(macs2_rep_consensus$grl[keep],
+                          ChIPseeker::annotatePeak,
+                          tssRegion=c(-3000, 3000),
+                          TxDb=txDb, annoDb="org.Hs.eg.db")
+saveRDS(macs2_annolst, file=file.path(data_dir, 'macs2_annolst.rds'))
+```
 ## Sample information
 ```{r load-peak-rds}
 # load peaks 
@@ -313,16 +324,9 @@ ggplot(aes(x=number_of_peaks, y=sample_id,
 - Use `ChIPseeker` to annotate the consensus peaks
 - Plot feature distribution
 
-```{r macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs', fig.width=6}
+```{r viz-macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs', fig.width=6}
 # make sure the GRanges is not empty before using # ChIPseeker::anotatePeak()
-keep <- macs2_rep_consensus$df %>%
-  dplyr::filter(number_of_peaks > 0) %>% pull(sample_id)
-
-macs2_annolst <- bplapply(macs2_rep_consensus$grl[keep],
-                          ChIPseeker::annotatePeak,
-                          tssRegion=c(-3000, 3000),
-                          TxDb=txDb, annoDb="org.Hs.eg.db")
-
+macs2_annolst <- readRDS(file.path(data_dir, 'macs2_annolst.rds'))
 plotAnnoBar(macs2_annolst)
 ```
 
