@@ -20,11 +20,13 @@ cos_similarity_by <- function(sample_df,
                               return_data = TURE) {
 
   # validate sim_group_by
-  is_valid <- all(sim_group_by %in% colnames(sample_df))
-  invalid_cols <- sim_group_by[!sim_group_by %in% colnames(sample_df)]
+  assert <- all(sim_group_by %in% colnames(sample_df))
 
-  if (!is_valid)
-    stop('Invalid columns in replicates_group_by:', invalid_cols)
+  if (!assert) {
+    invalid_cols <- sim_group_by[!sim_group_by %in% colnames(sample_df)]
+    stop('Invalid columns in sim_group_by:',
+         paste(invalid_cols, collapse = ',')
+  }
 
 
   cos_sim <- .construct_cos_sim_grl(peaks_grl,
