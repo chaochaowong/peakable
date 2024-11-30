@@ -3,8 +3,9 @@
 #' @param x GRanges
 #' @param y GRanges
 #' @export
-cos_similarity <- function(gr_x, gr_y) {
-  hits <- consolidated_peak_hits(list(gr_x, gr_y))
+cos_similarity <- function(x, y) {
+  # Get corpus peaks and the hit matrix
+  hits <- consolidated_peak_hits(list(x, y))
   x <- hits[, 1, drop=TRUE]
   y <- hits[, 2, drop=TRUE]
 

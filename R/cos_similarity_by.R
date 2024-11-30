@@ -16,8 +16,7 @@
 #' @export
 cos_similarity_by <- function(sample_df,
                               peaks_grl,
-                              sim_group_by,
-                              return_data = TURE) {
+                              sim_group_by) {
 
   # validate sim_group_by
   assert <- all(sim_group_by %in% colnames(sample_df))
