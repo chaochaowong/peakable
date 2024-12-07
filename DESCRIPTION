@@ -1,7 +1,7 @@
 Package: peakable
 Title: CUT&RUN-seq Peak caller QC 
-Description: functions facilitating peak caller QC and workflow for CUT&RUN-seq and CUT&Tag-seq
-Version: 0.99.28
+Description: Functions facilitating peak caller QC and workflow for CUT&RUN-seq and CUT&Tag-seq
+Version: 0.99.29
 Depends: R (>= 4.1.0), GenomicRanges, knitr
 Imports: plyranges, rtracklayer, dplyr, ggVennDiagram, purrr, tibble, GenomeInfoDb, ggplot2, stringr, GenomicAlignments, Biostrings, S4Vectors, Rsamtools
 Suggests: EnsDb.Hsapiens.v86, BSgenome.Hsapiens.UCSC.hg38, BiocParallel
