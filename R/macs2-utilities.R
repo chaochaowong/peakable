@@ -99,6 +99,8 @@ read_macs2_broad <- function(file, drop_chrM = FALSE,
   return(gr)
 }
 
+#' extract_summit_macs2
+#'
 #' Exact MACS2 narrow peak summit and convert to a GRanges object
 #' @gr: A GRanges of MACS2 narrow peak, and it should include the 'max.signal.region' in the metadata columns
 #' @summit_wid: NULL (default) or positive integer indicating the width of summit. Default to the width of 'max.signal.region'
