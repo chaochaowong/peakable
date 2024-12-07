@@ -18,5 +18,12 @@ cos_similarity_by(sample_df,
   The cosine similarity between peaks ranges that are "group by" \code{sim_group_by}.
 }
 \examples{
-
+peaksets <- load_dataset()
+# cosine similarity between replicates defined by "cell_line" and
+# "antibody" colums
+cos_sim <- cos_similarity_by(sample_df = peaksets$df,
+                             peaks_grl = peaksets$grl,
+                             sim_group_by = c('cell_line', 'antibody'))
+cos_sim
 }
+
