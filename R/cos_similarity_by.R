@@ -6,7 +6,7 @@
 #'
 #' @param sample_df A \code{data.frame} obtaining sample information
 #' @param peaks_grl A list of peak ranges as \code{GRanges} instances
-#' @param sim_group_by A vector of character to group the list of peak reanges
+#' @param sim_group_by A vector of character to group the list of peak ranges
 #'
 #' @return A data.frame
 #' @examples
@@ -24,7 +24,7 @@ cos_similarity_by <- function(sample_df,
   if (!assert) {
     invalid_cols <- sim_group_by[!sim_group_by %in% colnames(sample_df)]
     stop('Invalid columns in sim_group_by:',
-         paste(invalid_cols, collapse = ',')
+         paste(invalid_cols, collapse = ','))
   }
 
 
