@@ -26,7 +26,7 @@ See Also as \code{\link{plyranges::write_bed()}} and \code{\link{rtracklayer::BE
 
 \examples{
 
-  \donotrun{
+  \dontrun{
 
   }
 }
