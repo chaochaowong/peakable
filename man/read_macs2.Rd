@@ -8,12 +8,12 @@
 }
 
 \usage{
-  read_macs2_narrow(file, 
+  read_macs2_narrow(file,
                     drop_chrM = FALSE,
                     keep_standard_chrom = FALSE,
                     species = NULL, ...)
-  
-  read_macs2_broad(file, 
+
+  read_macs2_broad(file,
                    drop_chrM = FALSE,
                    keep_standard_chrom = FALSE,
                    species = NULL, ...)
@@ -29,9 +29,9 @@
 
 \details{
   This is a wrapper to the \code{import.bed} function defined in \pkg{rtracklayer}, modified to accommodate the importing of MACS2 peaks files in BED6+4 format. See https://genome.ucsc.edu/FAQ/FAQformat.html#format12 for details.
-  
+
   The \code{read_macs2_narrow} function parses the MACS2 narrowPeak BED format.
-  
+
   The \code{read_macs2_board} function parses the MACS2 broadPeak BED format.
 }
 
@@ -42,8 +42,8 @@
 
 \examples{
 # MACS2 narrowPeaks
-narrow_file <- system.file('extdata', 
-                           'chr2_Rep1_H1_CTCF_peaks.narrowPeak', 
+narrow_file <- system.file('extdata',
+                           'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
                             package='peakable')
 gr <- read_macs2_narrow(narrow_file)
 gr
@@ -53,19 +53,19 @@ gr <- read_macs2_narrow(narrow_file,
                         drop_chrM = TRUE,
                         keep_standard_chrom = TRUE,
                         species = 'Homo_sapiens')
-gr                        
+gr
 
 # MACS2 broadPeaks
-broad_file <- system.file('extdata', 
+broad_file <- system.file('extdata',
                           'chr2_Rep1_H1_H3K27me3_peaks.broadPeak',
-                           package='peakalbe')
+                           package='peakable')
 gr <- read_macs2_broad(broad_file)
 gr
 
 }
 
 \references{
-  https://genome.ucsc.edu/FAQ/FAQformat.html#format12 
+  https://genome.ucsc.edu/FAQ/FAQformat.html#format12
 }
 
 \seealso{

@@ -2,8 +2,9 @@
 \alias{load_dataset}
 
 \title{
-Load a sample dataset that is used for the vignette and examples in the man pages
+Load a sample dataset that is used for the vignette and examples in the man pages.
 }
+
 \description{
 Construct a list instance containing a \code{list} of peak ranges in \code{GRanges} and a \code{data.frame} representing the metadata of the peakset.
 }
