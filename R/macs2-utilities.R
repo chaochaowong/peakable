@@ -151,6 +151,7 @@ write_broadpeaks <- function(x, file) {
   broad_col_order <- c("seqnames", "start", "end", "name", "score",
                        "strand", extra_cols)
   broad_df <- as.data.frame(x)[, broad_col_order]
+
   utils::write.table(broad_df, file,
                      sep = "\t", row.names = FALSE,
                      col.names=FALSE,

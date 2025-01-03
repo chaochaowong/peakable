@@ -3,11 +3,11 @@
 \alias{write_seacr}
 
 \title{
-Write a BED file for MACS2 broadpeaks and SEACR peaks
+Write a BED file for MACS2 broadPeaks and SEACR peaks
 }
 
 \description{
-This is a wrapper to the export functions defined in \emph{rtracklayers}
+This is a wrapper to the export functions defined in \emph{plyranges} adn \emph{rtracklayers}.
 }
 
 \usage{
@@ -16,8 +16,8 @@ write_seacr(x, file)
 }
 
 \arguments{
-  \item{x}{A \code{GRanges} instance corresponding to either MACS2 broadPeaks or SEARC spec.}
-  \item{file}{A path to a file to write \code{x}.}
+  \item{x}{A \code{GRanges} object corresponding to either MACS2 broadPeaks or SEARC spec.}
+  \item{file}{A path or connection to a file to write \code{x}.}
 }
 
 \seealso{
