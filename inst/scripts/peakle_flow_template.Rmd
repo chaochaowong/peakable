@@ -81,17 +81,19 @@ system('mkdir -p macs2_consensus_peaks')
 data_dir           <- file.path(Rproj_dir, 'data')
 consensus_peak_dir <- file.path(Rproj_dir, 'macs2_consensus_peaks')
 fig_dir    <- file.path(Rproj_dir, 'figures')
+
+# replicate group_by
+rep_group_by  <- c('cell_line', 'antibody') # or treatment ....
 ```
 
-__`sample_df`__ data frame: Import a sample sheet or construct a `data.frame` of sample information. The code chuck below imports an existing sample sheet (`.csv`) that includes `sample_id`, `cell_line`, `antibody` columns. Note that `sample_id` is mandated for `sample_df`.
+__`sample_df`__ data frame: Import a sample sheet or construct a `data.frame` of sample information. The code chuck below imports an existing sample sheet (`.csv`) that includes, but not limited to `sample_id`, `cell_line`, `antibody` columns. Note that `sample_id` is mandated for `sample_df`.
 
 ```{r nf-sample-sheet-to-rds}
-# - import nexflow sample sheet
+# import nexflow sample sheet: the sample sheet is expected to include but not limited
+# to `sample_id`, `cell_line`, `antibody` columns.
 # 
-# - tidy up and save as 'sample_df.rds' in the data directory
-# - expect to have at least 'antibody' and 'cell_line' columns
+# - tidy up and save as 'sample_df.rds' and save to the data directory
 
-# sample sheet should have 'antibody' and 'cell_line' column
 sample_df <- read_csv(file.path(result_dir, 'data', 
                             'nf-sample-sheet.csv')) 
 
@@ -112,7 +114,9 @@ The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak
 
 
 ```{r get-macs2-peaks, eval=FALSE}
-# use peakle_flow
+# use peakable:::peakle_flow() to import narrow/broad peak ranges from a NextFlow 
+# result folder
+
 bed_dir <- file.path(result_dir, 'peak_calls', 'macs2_callpeak')
 bed_narrow_pattern <- '\\_peaks.narrowPeak$'
 bed_broad_pattern  <- '\\_peaks.broadPeak$'
@@ -153,12 +157,11 @@ saveRDS(macs2, file=file.path(data_dir, 'macs2.rds'))
 ```
 
 ```{r macs-replicate-consensus, eval=FALSE}
-# replicates consensus
+# replicates consensus: group by the parameter "rep_group_by"
 macs2_rep_consensus <- # use peakable:::consensus_by()
   peakable:::consensus_by(sample_df = macs2$df,
                           peaks_grl = macs2$grl,
-                          consensus_group_by = c('cell_line',
-                                                 'antibody'),
+                          consensus_group_by = rep_group_by,
                           peak_caller = 'macs2')
 
 saveRDS(macs2_rep_consensus, 
@@ -166,7 +169,11 @@ saveRDS(macs2_rep_consensus,
 ```
 
 ```{r macs-consensus-summit-bed, message=FALSE, eval=FALSE}
+# export macs2 consensus summit and narrowpeaks in bed and narrowPeak format, respectively, 
+# to the R_proj/macs2_consensus_peaks sub-folder
+
 # narrow peaks only
+
 is_narrow <- function(peaks) {
   any(names(mcols(peaks)) == 'peak')
 }
@@ -183,7 +190,7 @@ map2(macs2_rep_consensus$grl, names(macs2_rep_consensus$grl),
            plyranges::write_narrowpeaks(peaks, 
                                         file = file.path(consensus_peak_dir,
                                                          paste0(name,
-                                                                '.narrowPeak.bed')))
+                                                                '_cosensus_narrowPeak.bed')))
          }
        
        if (!is_narrow(peaks)) {
