@@ -214,6 +214,7 @@ macs2_annolst <- bplapply(macs2_rep_consensus$grl[keep],
                           TxDb=txDb, annoDb="org.Hs.eg.db")
 saveRDS(macs2_annolst, file=file.path(data_dir, 'macs2_annolst.rds'))
 ```
+
 ## Sample information
 ```{r load-peak-rds}
 # load peaks 
@@ -237,7 +238,7 @@ Use `ggplot` to visualized peak numbers with the sample group, such as cell_line
 ```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log10. Threshold: q-value = 0.01.'}
 # viz peak number by bar plot
 macs2$df %>%
-  dplyr::arrange(antibody, cell_line) %>%
+  dplyr::arrange(cell_line, antibody) %>%
   dplyr::mutate(sample_id = factor(sample_id, levels=sample_id)) %>%
   ggplot(aes(y=sample_id, x=number_of_peaks, 
              color=antibody, fill=antibody)) +
@@ -331,7 +332,7 @@ ggplot(aes(x=number_of_peaks, y=sample_id,
 - Use `ChIPseeker` to annotate the consensus peaks
 - Plot feature distribution
 
-```{r viz-macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs', fig.width=6}
+```{r viz-macs2-functional-annotation, message=FALSE, fig.cap='Feature distribution of MACS2 consensus peaks for TFs', fig.width=8}
 # make sure the GRanges is not empty before using # ChIPseeker::anotatePeak()
 macs2_annolst <- readRDS(file.path(data_dir, 'macs2_annolst.rds'))
 plotAnnoBar(macs2_annolst)
