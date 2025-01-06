@@ -197,7 +197,7 @@ map2(macs2_rep_consensus$grl, names(macs2_rep_consensus$grl),
            # export consensus
            peakable::write_broadpeaks(peaks, 
                                       file = file.path(consensus_peak_dir,
-                                                       paste0(name, '.broadPeak.bed')))
+                                                       paste0(name, '_consensus_broadPeak.bed')))
        }
 })
 
