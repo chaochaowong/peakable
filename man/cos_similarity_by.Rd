@@ -1,8 +1,8 @@
 \name{cos_similarity_by}
 \alias{cos_similarity_by}
-\title{Cosine similarity between defined replicates}
+\title{Cosine similarity between defined groups or replicates}
 \description{
-  A wraper function of \link{\code{cos_similarity}}. Take the list of GRanges, data.frame, and variables to group by, \code{cos_similarity_by} performs \code{cos_similarity} "by group".
+  A wraper function of \code{cos_similarity}. Take the list of GRanges, data.frame obtaining the sample inforamtion, and variables to "group by", \code{cos_similarity_by} performs \code{cos_similarity} "by group".
 }
 \usage{
 cos_similarity_by(sample_df,
