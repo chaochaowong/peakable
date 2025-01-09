@@ -139,7 +139,10 @@ macs2_narrow <- # return: df and grl
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_narrow_pattern,
                          bam_dir = bam_dir,
-                         bam_pattern = bam_pattern) 
+                         bam_pattern = bam_pattern,
+                         remove_blacklist = TRUE,
+                         blacklist = NULL, # use the blacklist for hg38 in the package
+                         species = "Homo_sapiens") 
 
 macs2_broad <- # return: df and grl 
   peakable:::peakle_flow(sample_df = df_broad, 
@@ -148,7 +151,10 @@ macs2_broad <- # return: df and grl
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_broad_pattern,
                          bam_dir = bam_dir,
-                         bam_pattern = bam_pattern) 
+                         bam_pattern = bam_pattern,
+                         remove_blacklist = TRUE,
+                         blacklist = NULL, # use the blacklist for hg38 in the package
+                         species = "Homo_sapiens") 
 
 # combine narrow and broad peaks
 macs2 <- peakable:::.macs2_bind(macs2_narrow, macs2_broad)
@@ -346,6 +352,7 @@ plotAnnoBar(macs2_annolst)
 bed_dir <- file.path(result_dir, 'peak_calls', 'seacr_callpeak')
 bed_pattern <- '\\_norm.stringent.bed$'
 #bed_pattern <- '\\_threshold0.01_norm.stringent.bed$'
+bam_dir <- file.path(result_dir, 'samtools_sort')
 bam_pattern <- '\\.markedDup.filter.sort.bam$'
 
 #' use the peakle_flow to return seacr$df (info) and 
@@ -356,7 +363,11 @@ seacr_stringent <-
                          peak_caller = 'SEACR-stringent',
                          peak_bed_dir = bed_dir, 
                          peak_bed_pattern = bed_pattern,
-                         bam_pattern = bam_pattern) 
+                         bam_dir <- file.path(result_dir, 'samtools_sort')
+                         bam_pattern = bam_pattern, 
+                         remove_blacklist = TRUE,
+                         blacklist = NULL, # use the blacklist for hg38 in the package
+                         species = "Homo_sapiens") 
 # pick one per sample_id
 saveRDS(seacr_stringent, file.path(data_dir, 'seacr_stringent.rds'))
 ```
