@@ -204,9 +204,18 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                        peak_call_func, # miss match peak type and func
                        drop_chrM = TRUE,
                        keep_standard_chrom = TRUE,
-                       species = 'Homo_sapiens')
+                       species = species)
+  
   names(peak_grl) <- peak_df$sample_id
-
+  
+  # remove blacklist: now only works if species is
+  if (remove_blacklist) {
+    peak_grl <- bplapply(peak_glr,
+                         remove_blacklist,
+                         blacklist_file = balcklist_file,
+                         species = species)
+  }
+  
   peak_df$number_of_peaks <- sapply(peak_grl, length)
 
   return(list(df = peak_df, grl = peak_grl))
