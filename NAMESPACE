@@ -34,4 +34,6 @@ export(find_consensus_seacr,
 export(peak_read_count)
 
 export(cos_similarity,
-       cos_similarity_by)
+       cos_similarity_by) 
+
+export(remove_blocklist)
