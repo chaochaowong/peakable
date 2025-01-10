@@ -213,7 +213,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   if (remove_blacklist) {
     peak_grl <- bplapply(peak_grl,
                          remove_blacklist,
-                         blacklist_file = blaclist_file,
+                         blacklist_file = blacklist_file,
                          species = species)
   }
   
