@@ -79,7 +79,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         bam_dir = NULL, # default to samtools_sort
                         bam_pattern = NULL, # default to '\\.markedDup.stats$'
                         species = "Homo_sapiens",
-                        remove_blacklist = FALSE
+                        remove_blacklist = FALSE,
                         blacklist_file = NULL) {
   require(dplyr)
   require(stringr)
