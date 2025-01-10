@@ -371,3 +371,9 @@ seacr_stringent <-
 # pick one per sample_id
 saveRDS(seacr_stringent, file.path(data_dir, 'seacr_stringent.rds'))
 ```
+
+# sessionInfo
+
+```{r session-info}
+sessionInfo()
+```

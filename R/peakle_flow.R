@@ -79,7 +79,8 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
                         bam_dir = NULL, # default to samtools_sort
                         bam_pattern = NULL, # default to '\\.markedDup.stats$'
                         species = "Homo_sapiens",
-                        remove_blacklist = FALSE) {
+                        remove_blacklist = FALSE
+                        blacklist_file = NULL) {
   require(dplyr)
   require(stringr)
   require(purrr)
@@ -212,7 +213,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   if (remove_blacklist) {
     peak_grl <- bplapply(peak_glr,
                          remove_blacklist,
-                         blacklist_file = balcklist_file,
+                         blacklist_file = blaclist_file,
                          species = species)
   }
   
