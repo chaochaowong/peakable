@@ -113,7 +113,7 @@ The code chunk below uses `peakable:::peakle_flow()` to import narrow/broad peak
 - The path to `bam` files is set to `result_dir/samtools_sort` (I might in the future allow user to define the `bam_dir`)
 
 
-```{r get-macs2-peaks, eval=FALSE}
+```{r get-macs2-peaks, message=FALSE, eval=FALSE}
 # use peakable:::peakle_flow() to import narrow/broad peak ranges from a NextFlow 
 # result folder
 
@@ -347,7 +347,7 @@ plotAnnoBar(macs2_annolst)
 
 # SEACR 
 
-```{r use-peak-flow-get-seacr-peaks}
+```{r use-peak-flow-get-seacr-peaks, message=FALSE, echo=FALSE}
 # get import SEACR bed files 
 bed_dir <- file.path(result_dir, 'peak_calls', 'seacr_callpeak')
 bed_pattern <- '\\_norm.stringent.bed$'

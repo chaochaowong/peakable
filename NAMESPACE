@@ -36,4 +36,4 @@ export(peak_read_count)
 export(cos_similarity,
        cos_similarity_by) 
 
-export(remove_blocklist)
+export(remove_blacklist)
