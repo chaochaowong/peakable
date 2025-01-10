@@ -95,7 +95,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
     stop(peak_bed_dir, ' does not exist.')
 
   if (!is.null(bam_dir)) {
-     stopifnot(file.exist(bam_dir))
+     stopifnot(file.exists(bam_dir))
   }
 
   # define bam_dir and patterns
@@ -211,7 +211,7 @@ peakle_flow <- function(sample_df, # must be from nf_sample_sheet
   
   # remove blacklist: now only works if species is
   if (remove_blacklist) {
-    peak_grl <- bplapply(peak_glr,
+    peak_grl <- bplapply(peak_grl,
                          remove_blacklist,
                          blacklist_file = blaclist_file,
                          species = species)

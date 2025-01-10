@@ -88,7 +88,7 @@ rep_group_by  <- c('cell_line', 'antibody') # or treatment ....
 
 __`sample_df`__ data frame: Import a sample sheet or construct a `data.frame` of sample information. The code chuck below imports an existing sample sheet (`.csv`) that includes, but not limited to `sample_id`, `cell_line`, `antibody` columns. Note that `sample_id` is mandated for `sample_df`.
 
-```{r nf-sample-sheet-to-rds}
+```{r nf-sample-sheet-to-rds, message=FALSE, echo=FALSE}
 # import nexflow sample sheet: the sample sheet is expected to include but not limited
 # to `sample_id`, `cell_line`, `antibody` columns.
 # 
