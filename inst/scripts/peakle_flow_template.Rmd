@@ -239,7 +239,7 @@ macs2$df %>%
 ```
 
 # Peak numbers
-Use `ggplot` to visualized peak numbers with the sample group, such as cell_line or antiboy.
+Use `ggplot` to visualized peak numbers with the sample group, such as cell_line or antibody.
 
 ```{r display-narrow-peak-number, fig.height=6, fig.cap='MACS2 narrow and broad peak numbers. X-axis (numbers) scalled by log10. Threshold: q-value = 0.01.'}
 # viz peak number by bar plot
@@ -372,8 +372,7 @@ seacr_stringent <-
 saveRDS(seacr_stringent, file.path(data_dir, 'seacr_stringent.rds'))
 ```
 
-# sessionInfo
-
+# Session Info
 ```{r session-info}
 sessionInfo()
 ```
