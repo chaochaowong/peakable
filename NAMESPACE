@@ -15,6 +15,7 @@ import(ggplot2)
 export(read_macs2_narrow,
        read_macs2_broad,
        read_seacr,
+       read_fire_peaks,
        write_broadpeaks,
        write_seacr)
 
