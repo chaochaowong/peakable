@@ -23,14 +23,25 @@ remove_blacklist <- function(gr,
   # import and make sure it is not empty
   message('Import blacklist file: ', blacklist_file)
   blacklist <- rtracklayer::import.bed(blacklist_file)
-  is_compatible <- identical(seqlevelsStyle(blacklist), seqlevelsStyle(gr))
   
-  # if not compatible, stop
-  if (!is_compatible)
-    stop('The sequence levels style of the blacklist and the peak ranges are not compatible.')
   
-  gr %>% 
-    plyranges::filter_by_non_overlaps(blacklist, minoverlap = 1L)
+  if (length(gr) > 1) {
+    is_compatible <- identical(seqlevelsStyle(blacklist), seqlevelsStyle(gr))
+    
+    # if not compatible, stop
+    if (!is_compatible) {
+      # update style of blacklist
+      seqlevelsStyle(blacklist)  <- 'UCSC'
+      if (!identical(seqlevelsStyle(blacklist), seqlevelsStyle(gr)))
+        stop('The sequence levels style of the blacklist and the peak ranges are not compatible.')
+    }
+    
+    # only apply to gr that has lengh > 0
+    gr <- gr %>% 
+      plyranges::filter_by_non_overlaps(blacklist, minoverlap = 1L)
+  }
+  
+  return(gr)
     
 }
 

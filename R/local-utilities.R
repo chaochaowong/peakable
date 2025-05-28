@@ -2,10 +2,6 @@
 #' TODO: all the utilities here need to be tested by unti test
 #' 
 
-
-#' ====
-#' @param mat matrix (n-by-m)
-#' @param norm_factor a vector of length m
 .normalize_columns <- function(mat, norm_factor) {
   #' multiple the m-th column of a N-by-M matrix by
   #' by the m-th element of norm_factor (1-by-M)
@@ -23,15 +19,19 @@
 #' @importFrom dplyr left_join
 
 .getPCA <- function(mat, sample_info=NULL, n_pcs=2) {
-  pca <- prcomp(mat, scale = TRUE)
-  pcs <- as.data.frame(pca$rotation[, 1:n_pcs]) 
+  pca <- prcomp(t(mat))
+  pcs <- as.data.frame(pca$x[, 1:n_pcs]) 
   
   if (!is.null(sample_info) & 'sample_id' %in% names(sample_info)) {
     pcs <- pcs %>%
       tibble::rownames_to_column(var='sample_id') %>%
       dplyr::left_join(sample_info, by='sample_id')
   }
-  return(pcs)
+  
+  var_pcs <- pca$sdev^2
+  # proportion of total variance explained
+  prop_var <- var_pcs / sum(var_pcs)
+  return(list(pcs = pcs, prop_var = prop_var[1:n_pcs] )
 }
 
 #' ====
