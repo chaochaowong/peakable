@@ -31,7 +31,8 @@
   var_pcs <- pca$sdev^2
   # proportion of total variance explained
   prop_var <- var_pcs / sum(var_pcs)
-  return(list(pcs = pcs, prop_var = prop_var[1:n_pcs] )
+  return(list(pcs = pcs, prop_var = prop_var[1:n_pcs] ))
+         
 }
 
 #' ====
