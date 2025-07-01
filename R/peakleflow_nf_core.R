@@ -81,8 +81,7 @@ peakleflow_nf_core <- function(sample_df, # must be from nf_sample_sheet
                                species = "Homo_sapiens",
                                remove_blacklist = FALSE,
                                blacklist_file = NULL,
-                               drop_chrM = FALSE
-                               mito = NULL) {
+                               drop_chrM = FALSE) {
   require(dplyr)
   require(stringr)
   require(purrr)
@@ -205,7 +204,7 @@ peakleflow_nf_core <- function(sample_df, # must be from nf_sample_sheet
 
   peak_grl <- bplapply(peak_df$bed_file,
                        peak_call_func, # miss match peak type and func
-                       drop_chrM = TRUE,
+                       drop_chrM = drop_chrM,
                        keep_standard_chrom = TRUE,
                        species = species)
   
