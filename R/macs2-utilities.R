@@ -34,13 +34,14 @@ read_macs2_narrow <- function(file, drop_chrM = FALSE,
     gr <- GenomeInfoDb::keepStandardChromosomes(gr, pruning.mode='coarse',
                                                 species = species)
 
-  if (drop_chrM & length(gr) > 0) {
-    if (GenomeInfoDb::seqlevelsStyle(gr) == 'UCSC') value = 'chrM'
-    if (GenomeInfoDb::seqlevelsStyle(gr) == 'NCBI') value = 'M'
-    if (value %in% seqlevels(gr))
-      gr <- GenomeInfoDb::dropSeqlevels(gr, value=value,
-                                        pruning.mode='coarse')
-  }
+  #if (drop_chrM & length(gr) > 0 ) {
+  #  # this is only for human
+  #  if (GenomeInfoDb::seqlevelsStyle(gr) == 'UCSC') value = 'chrM'
+  #  if (GenomeInfoDb::seqlevelsStyle(gr) == 'NCBI') value = 'M'
+  #  if (value %in% seqlevels(gr))
+  #    gr <- GenomeInfoDb::dropSeqlevels(gr, value=value,
+  #                                      pruning.mode='coarse')
+  #}
 
   return(gr)
 }

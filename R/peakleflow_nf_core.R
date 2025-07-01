@@ -80,7 +80,9 @@ peakleflow_nf_core <- function(sample_df, # must be from nf_sample_sheet
                                bam_pattern = NULL, 
                                species = "Homo_sapiens",
                                remove_blacklist = FALSE,
-                               blacklist_file = NULL) {
+                               blacklist_file = NULL,
+                               drop_chrM = FALSE
+                               mito = NULL) {
   require(dplyr)
   require(stringr)
   require(purrr)
