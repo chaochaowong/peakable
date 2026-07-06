@@ -83,7 +83,7 @@ write_seacr <- function(x, file) {
 #' 
 #' @return a GRanges object with columns name and score (max.signal)
 #' @rdname extract_summit
-#' @importFrom plyranges mutate
+#' @importFrom dplyr mutate
 #' @examples
 #' seacr_file <- system.file('extdata',
 #'                           'chr2_Rep1_H1_CTCF.stringent.bed',
@@ -113,16 +113,16 @@ extract_summit_seacr <- function(gr, summit_wid = NULL) {
   }
   
   summit <- GRanges(gr$max.signal.region) 
-  summit <- plyranges::mutate(summit, 
-                              name = paste0('peakname_', 1:length(gr)),
-                              AUC = gr$AUC,
-                              max.signal = gr$max.signal,
-                              itemRgb ='#0000FF')
+  summit <- mutate(summit, 
+                   name = paste0('peakname_', 1:length(gr)),
+                   AUC = gr$AUC,
+                   max.signal = gr$max.signal,
+                   itemRgb ='#0000FF')
   
   # Ensure the width of summit conformed with the input setting
   if (!is.null(summit_wid) & is.integer(summit_wid)) {
     summit <- 
-      plyranges::mutate(anchor_center(summit), width = summit_wid)
+      mutate(anchor_center(summit), width = summit_wid)
   }
   
   return(summit)

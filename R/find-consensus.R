@@ -24,7 +24,7 @@
 #'
 #' consensus <- find_consensus_seacr(x, y)
 #' consensus
-#' @importFrom plyranges mutate select find_overlaps
+#' @importFrom plyranges find_overlaps
 #' @export
 find_consensus_seacr <- function(x, y, minoverlap = NULL) {
 
@@ -42,22 +42,22 @@ find_consensus_seacr <- function(x, y, minoverlap = NULL) {
     plyranges::find_overlaps(x, y, minoverlap = minoverlap)
 
   # update mcols: max.signal.region, max.signal, AUC
-  consensus <- consensus %>%
-    plyranges::mutate(AUC =
-                        if_else(max.signal.x > max.signal.y,
-                                AUC.x, AUC.y)) %>%
-    plyranges::mutate(max.signal =
-                        if_else(max.signal.x > max.signal.y,
-                                max.signal.x, max.signal.y)) %>%
-    plyranges::mutate(max.signal.region =
-                        if_else(max.signal.x > max.signal.y,
-                                max.signal.region.x, max.signal.region.y))
+  consensus_mcols <- mcols(consensus)
+  keep_x <- consensus_mcols$max.signal.x > consensus_mcols$max.signal.y
 
+  consensus$AUC <- ifelse(keep_x, consensus_mcols$AUC.x,
+                          consensus_mcols$AUC.y)
+  consensus$max.signal <- ifelse(keep_x, consensus_mcols$max.signal.x,
+                                 consensus_mcols$max.signal.y)
+  consensus$max.signal.region <- ifelse(keep_x,
+                                        consensus_mcols$max.signal.region.x,
+                                        consensus_mcols$max.signal.region.y)
 
-  # drop off the mcols of x and y and keep unqiue
-  consensus %>%
-    plyranges::select(AUC, max.signal, max.signal.region) %>%
-    BiocGenerics::unique(.)
+  # drop off the mcols of x and y and keep unique
+  mcols(consensus) <- mcols(consensus)[, c('AUC', 'max.signal',
+                                           'max.signal.region'),
+                                       drop = FALSE]
+  BiocGenerics::unique(consensus)
 }
 
 #' find_consensus_macs2
@@ -88,7 +88,7 @@ find_consensus_seacr <- function(x, y, minoverlap = NULL) {
 #'
 #' consensus <- find_consensus_macs2(x, y)
 #' consensus
-#' @importFrom plyranges mutate select find_overlaps
+#' @importFrom plyranges find_overlaps
 #' @importFrom stringr str_detect
 #' @export
 find_consensus_macs2 <- function(x, y, minoverlap = NULL) {
@@ -107,22 +107,19 @@ find_consensus_macs2 <- function(x, y, minoverlap = NULL) {
 
   # only keep mcols of x and unique only; letter will change to whichever have
   # better qValue
-  consensus <- consensus %>%
-    plyranges::mutate(name = name.x,
-                      score = score.x,
-                      signalValue = signalValue.x,
-                      pValue = pValue.x,
-                      qValue = qValue.x)
+  consensus_mcols <- mcols(consensus)
+  consensus$name <- consensus_mcols$name.x
+  consensus$score <- consensus_mcols$score.x
+  consensus$signalValue <- consensus_mcols$signalValue.x
+  consensus$pValue <- consensus_mcols$pValue.x
+  consensus$qValue <- consensus_mcols$qValue.x
+
+  keep_cols <- c('name', 'score', 'signalValue', 'pValue', 'qValue')
   if (any(stringr::str_detect(names(mcols(consensus)), 'peak'))) {
-    consensus <- consensus %>%
-      plyranges::mutate(peak = peak.x) %>%
-      plyranges::select(name, score, signalValue, pValue, qValue, peak) %>%
-      BiocGenerics::unique(.)
-  } else {
-    consensus <- consensus %>%
-      plyranges::select(name, score, signalValue, pValue, qValue) %>%
-      BiocGenerics::unique(.)
+    consensus$peak <- consensus_mcols$peak.x
+    keep_cols <- c(keep_cols, 'peak')
   }
 
-  return(consensus)
+  mcols(consensus) <- mcols(consensus)[, keep_cols, drop = FALSE]
+  return(BiocGenerics::unique(consensus))
 }

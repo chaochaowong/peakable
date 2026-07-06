@@ -109,6 +109,7 @@ read_macs2_broad <- function(file, drop_chrM = FALSE,
 #' @return a GRanges object
 #' @rdname extract_summit
 #' @importFrom plyranges as_granges
+#' @importFrom dplyr mutate
 #' @examples
 #' narrow_file <- system.file('extdata',
 #'                            'chr2_Rep1_H1_CTCF_peaks.narrowPeak',
@@ -130,8 +131,8 @@ extract_summit_macs2 <- function(gr, summit_wid = NULL) {
 
   # assuming the peak is not strand-sensitive
   summit <- gr %>%
-    plyranges::mutate(start = start + peak, width=1L)
-  summit <- plyranges::mutate(anchor_center(summit), width=summit_wid)
+    mutate(start = start + peak, width=1L)
+  summit <- mutate(anchor_center(summit), width=summit_wid)
   mcols(summit) <- mcols(summit)[, names(mcols(summit)) != 'peak']
 
   return(summit)

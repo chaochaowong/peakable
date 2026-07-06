@@ -8,7 +8,8 @@ importFrom(purrr, map_df, map_dfc, map_dfr, map)
 importFrom(tibble, add_column)
 importFrom(stringr, str_detect, str_replace, str_replace_all)
 
-import(GenomicRanges, plyranges)
+import(GenomicRanges)
+importFrom(plyranges, anchor_3p, anchor_center, as_granges, find_overlaps, stretch)
 import(dplyr)
 import(ggplot2)
 

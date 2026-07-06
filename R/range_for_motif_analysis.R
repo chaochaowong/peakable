@@ -9,8 +9,8 @@ reframe_summit_region_seacrp <- function(file_name, reframe_width = 200L) {
   require(GenomicRanges)
   peak_gr <- read_seacr(file_name)
   summit_gr <- GRanges(peak_gr$max.signal.region)
-  summit_gr <- plyranges::mutate(anchor_center(summit_gr),
-                                 width = reframe_width) %>%
+  summit_gr <- mutate(anchor_center(summit_gr),
+                      width = reframe_width) %>%
     mutate(score = mcols(peak_gr)$max.signal) %>%
     arrange(desc(score)) %>%
     mutate(name = paste0('peak_', 1:length(.)))
